@@ -1,0 +1,92 @@
+{
+  "ours_multimodal_ga": {
+    "mean_dice": 0.0,
+    "std_dice": 0.0,
+    "median_dice": 0.0,
+    "min_dice": 0.0,
+    "max_dice": 0.0,
+    "num_cases": 3,
+    "WT_Dice_mean": 0.03959373019714991,
+    "WT_Dice_std": 0.02920604470016094,
+    "TC_Dice_mean": 0.0,
+    "TC_Dice_std": 0.0,
+    "ET_Dice_mean": 0.0,
+    "ET_Dice_std": 0.0,
+    "WT_Hausdorff95_mean": Infinity,
+    "WT_Hausdorff95_std": NaN,
+    "TC_Hausdorff95_mean": Infinity,
+    "TC_Hausdorff95_std": NaN,
+    "ET_Hausdorff95_mean": Infinity,
+    "ET_Hausdorff95_std": NaN,
+    "inference_time": {
+      "mean": 0.18411922454833984,
+      "std": 0.020924548107017514,
+      "total": 0.5523576736450195
+    },
+    "model_info": {
+      "name": "Ours (Multimodal GA-Optimized)",
+      "parameters": 56791816,
+      "device": "cpu"
+    }
+  },
+  "nnu_net": {
+    "mean_dice": 0.0023783765651072806,
+    "std_dice": 0.003363532394805052,
+    "median_dice": 0.0,
+    "min_dice": 0.0,
+    "max_dice": 0.007135129695321841,
+    "num_cases": 3,
+    "WT_Dice_mean": 0.03959314451264328,
+    "WT_Dice_std": 0.029205613715407173,
+    "TC_Dice_mean": 0.02319165022042527,
+    "TC_Dice_std": 0.0327979462755384,
+    "ET_Dice_mean": 0.007135129695321841,
+    "ET_Dice_std": 0.010090597184415157,
+    "WT_Hausdorff95_mean": Infinity,
+    "WT_Hausdorff95_std": NaN,
+    "TC_Hausdorff95_mean": Infinity,
+    "TC_Hausdorff95_std": NaN,
+    "ET_Hausdorff95_mean": Infinity,
+    "ET_Hausdorff95_std": NaN,
+    "inference_time": {
+      "mean": 0.2920265992482503,
+      "std": 0.02101007617429653,
+      "total": 0.876079797744751
+    },
+    "model_info": {
+      "name": "nnU-Net",
+      "parameters": 1885700,
+      "device": "cpu"
+    }
+  },
+  "attention_unet": {
+    "mean_dice": 0.005467164764072671,
+    "std_dice": 0.007731738557079874,
+    "median_dice": 0.0,
+    "min_dice": 0.0,
+    "max_dice": 0.016401494292218013,
+    "num_cases": 3,
+    "WT_Dice_mean": 0.03959314451264328,
+    "WT_Dice_std": 0.029205613715407173,
+    "TC_Dice_mean": 0.0,
+    "TC_Dice_std": 0.0,
+    "ET_Dice_mean": 0.0,
+    "ET_Dice_std": 0.0,
+    "WT_Hausdorff95_mean": Infinity,
+    "WT_Hausdorff95_std": NaN,
+    "TC_Hausdorff95_mean": Infinity,
+    "TC_Hausdorff95_std": NaN,
+    "ET_Hausdorff95_mean": Infinity,
+    "ET_Hausdorff95_std": NaN,
+    "inference_time": {
+      "mean": 0.29562703768412274,
+      "std": 0.01621274201926593,
+      "total": 0.8868811130523682
+    },
+    "model_info": {
+      "name": "Attention U-Net",
+      "parameters": 1885700,
+      "device": "cpu"
+    }
+  }
+}

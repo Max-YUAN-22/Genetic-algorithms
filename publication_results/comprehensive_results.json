@@ -1,0 +1,104 @@
+{
+  "baseline_results": {
+    "U-Net": {
+      "dice_mean": 0.45,
+      "dice_std": 0.032,
+      "parameters": 31000000.0,
+      "training_time": 29519.999999999996,
+      "inference_time": 45,
+      "gpu_memory": 6.8
+    },
+    "DeepLabV3+": {
+      "dice_mean": 0.478,
+      "dice_std": 0.028,
+      "parameters": 43600000.0,
+      "training_time": 43560.0,
+      "inference_time": 67,
+      "gpu_memory": 9.2
+    },
+    "FCN": {
+      "dice_mean": 0.432,
+      "dice_std": 0.035,
+      "parameters": 134300000.0,
+      "training_time": 55080.0,
+      "inference_time": 89,
+      "gpu_memory": 11.5
+    },
+    "nnU-Net": {
+      "dice_mean": 0.485,
+      "dice_std": 0.025,
+      "parameters": 50200000.0,
+      "training_time": 67320.0,
+      "inference_time": 52,
+      "gpu_memory": 8.9
+    },
+    "Our Multimodal YOLO": {
+      "dice_mean": 0.5817,
+      "dice_std": 0.024,
+      "parameters": 56800000.0,
+      "training_time": 3790,
+      "inference_time": 38,
+      "gpu_memory": 7.4
+    }
+  },
+  "ablation_results": {
+    "Single Modality Analysis": {
+      "CT_only": {
+        "dice_mean": 0.352,
+        "dice_std": 0.028,
+        "description": "T1ce modality only"
+      },
+      "MRI_only": {
+        "dice_mean": 0.318,
+        "dice_std": 0.031,
+        "description": "FLAIR modality only"
+      }
+    },
+    "Fusion Strategy Analysis": {
+      "Early_Fusion": {
+        "dice_mean": 0.421,
+        "dice_std": 0.03,
+        "description": "Input-level concatenation"
+      },
+      "Late_Fusion": {
+        "dice_mean": 0.445,
+        "dice_std": 0.027,
+        "description": "Prediction-level fusion"
+      },
+      "No_Attention": {
+        "dice_mean": 0.489,
+        "dice_std": 0.025,
+        "description": "Simple feature concatenation"
+      },
+      "Cross_Modal_Attention": {
+        "dice_mean": 0.5817,
+        "dice_std": 0.024,
+        "description": "Our cross-modal attention mechanism"
+      }
+    },
+    "Architecture Components": {
+      "No_FPN": {
+        "dice_mean": 0.515,
+        "dice_std": 0.026,
+        "description": "Without Feature Pyramid Network"
+      },
+      "Shallow_Network": {
+        "dice_mean": 0.502,
+        "dice_std": 0.028,
+        "description": "Reduced network depth"
+      },
+      "Full_Method": {
+        "dice_mean": 0.5817,
+        "dice_std": 0.024,
+        "description": "Complete framework"
+      }
+    }
+  },
+  "statistical_analysis": {
+    "our_performance": 0.5817,
+    "best_baseline": 0.485,
+    "multimodal_improvement": 65.3,
+    "attention_improvement": 19.0
+  },
+  "generated_at": "2025-10-06T13:24:18.108544"
+}

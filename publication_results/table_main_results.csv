@@ -1,0 +1,6 @@
+Model,WT Dice,TC Dice,ET Dice,Latency (ms),FLOPs (B)
+Ours (CMA+GA),, , , ,
+YOLO-Base,, , , ,
+Attention U-Net,, , , ,
+nnU-Net,, , , ,
+

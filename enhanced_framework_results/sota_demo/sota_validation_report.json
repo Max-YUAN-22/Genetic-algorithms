@@ -1,0 +1,229 @@
+{
+  "validation_summary": {
+    "date": "2025-10-06 16:28:05",
+    "num_test_cases": 0,
+    "models_evaluated": [
+      "ours_multimodal_ga",
+      "nnu_net",
+      "attention_unet"
+    ],
+    "evaluation_metrics": [
+      "dice_coefficient",
+      "hausdorff_95",
+      "sensitivity",
+      "specificity",
+      "average_surface_distance",
+      "volumetric_similarity"
+    ]
+  },
+  "model_performance": {
+    "ours_multimodal_ga": {
+      "dice_coefficient": 0.0,
+      "std_dice": 0.0,
+      "inference_time": {
+        "mean": 0.18411922454833984,
+        "std": 0.020924548107017514,
+        "total": 0.5523576736450195
+      },
+      "model_parameters": 56791816,
+      "detailed_metrics": {
+        "dice_coefficient": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "hausdorff_95": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "sensitivity": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "specificity": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "average_surface_distance": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "volumetric_similarity": {
+          "mean": 0.0,
+          "std": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        }
+      }
+    },
+    "nnu_net": {
+      "dice_coefficient": 0.0023783765651072806,
+      "std_dice": 0.003363532394805052,
+      "inference_time": {
+        "mean": 0.2920265992482503,
+        "std": 0.02101007617429653,
+        "total": 0.876079797744751
+      },
+      "model_parameters": 1885700,
+      "detailed_metrics": {
+        "dice_coefficient": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        },
+        "hausdorff_95": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        },
+        "sensitivity": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        },
+        "specificity": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        },
+        "average_surface_distance": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        },
+        "volumetric_similarity": {
+          "mean": 0.0023783765651072806,
+          "std": 0.003363532394805052,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.007135129695321841
+        }
+      }
+    },
+    "attention_unet": {
+      "dice_coefficient": 0.005467164764072671,
+      "std_dice": 0.007731738557079874,
+      "inference_time": {
+        "mean": 0.29562703768412274,
+        "std": 0.01621274201926593,
+        "total": 0.8868811130523682
+      },
+      "model_parameters": 1885700,
+      "detailed_metrics": {
+        "dice_coefficient": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        },
+        "hausdorff_95": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        },
+        "sensitivity": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        },
+        "specificity": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        },
+        "average_surface_distance": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        },
+        "volumetric_similarity": {
+          "mean": 0.005467164764072671,
+          "std": 0.007731738557079874,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 0.016401494292218013
+        }
+      }
+    }
+  },
+  "statistical_analysis": {},
+  "rankings": {
+    "dice_coefficient": [
+      "attention_unet",
+      "nnu_net",
+      "ours_multimodal_ga"
+    ],
+    "inference_speed": [
+      "ours_multimodal_ga",
+      "nnu_net",
+      "attention_unet"
+    ],
+    "parameter_efficiency": [
+      "attention_unet",
+      "nnu_net",
+      "ours_multimodal_ga"
+    ]
+  },
+  "clinical_insights": {
+    "best_overall_method": "attention_unet",
+    "clinical_recommendations": [],
+    "performance_tiers": {
+      "excellent": [],
+      "good": [],
+      "acceptable": [],
+      "inadequate": [
+        "ours_multimodal_ga",
+        "nnu_net",
+        "attention_unet"
+      ]
+    },
+    "trade_offs": {
+      "ours_multimodal_ga": {
+        "accuracy_vs_speed": 0.0,
+        "accuracy_vs_complexity": 0.0
+      },
+      "nnu_net": {
+        "accuracy_vs_speed": 0.008116589317177772,
+        "accuracy_vs_complexity": 0.00015394212196739483
+      },
+      "attention_unet": {
+        "accuracy_vs_speed": 0.01843110731495299,
+        "accuracy_vs_complexity": 0.0003538661443583285
+      }
+    }
+  }
+}

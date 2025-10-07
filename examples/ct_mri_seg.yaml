@@ -1,0 +1,15 @@
+# CT+MRI fused segmentation dataset config (YOLO format)
+
+# Root directory containing images/ and labels/ subfolders
+path: /ABSOLUTE/PATH/TO/ct_mri_fused
+
+train: images/train
+val: images/val
+
+# Classes
+names:
+  0: tumor
+
+
+
+

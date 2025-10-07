@@ -1,0 +1,30 @@
+% Methods and Experiments (LaTeX-ready)
+\section{Methods}
+\subsection{Architecture}
+We adopt a YOLO-style encoder-decoder with a segmentation head tailored for multimodal inputs. Two modality-specific streams (CT and MRI) process inputs in parallel, and their features are fused via a cross-modal attention (CMA) module at multiple scales.
+
+\paragraph{Cross-Modal Attention}
+Given CT and MRI features $F_c$ and $F_m$, CMA computes queries, keys, and values per stream and exchanges information:
+\[ A = \mathrm{softmax}\left(\frac{Q_c K_m^\top}{\tau}\right)V_m, \quad A' = \mathrm{softmax}\left(\frac{Q_m K_c^\top}{\tau}\right)V_c, \]
+with residual gating and LayerNorm for stability. The fused features feed into the decoder and segmentation head.
+
+\subsection{Multi-Objective Genetic Tuning}
+We jointly optimize accuracy (Dice), efficiency (FLOPs/latency), and predictive uncertainty under constraints. The gene space includes width/depth, kernel sizes, attention on/off, thresholds, and augmentation policies. We employ tournament selection, simulated binary crossover, Gaussian mutation, and elitism with early stopping.
+
+\subsection{Uncertainty and Postprocessing}
+We estimate voxel-wise variance via Monte Carlo Dropout or test-time augmentation. Calibration-aware thresholding and morphological postprocessing (keep largest per class, min component size, closing) are applied.
+
+\section{Experiments}
+\subsection{Datasets and Protocol}
+We follow BRaTS-style settings and synthetic validations. Data are preprocessed with robust normalization and registration. We fix seeds and report mean$\pm$std over $\geq$5 runs.
+
+\subsection{Baselines and Metrics}
+Baselines include U-Net, Attention U-Net, nnU-Net, and YOLO-based segmentation. We report Dice (WT/TC/ET), Jaccard, Hausdorff95, sensitivity/specificity, and calibration metrics (ECE).
+
+\subsection{Implementation Details}
+Reproducibility is ensured by global seeding, MLflow logging, and environment metadata. Inference-time efficiency is measured on CPU for portability and on a representative GPU for throughput.
+
+\subsection{Statistical Significance}
+We conduct Welch's t-tests for repeated experiments and report Cohen's $d$ as effect size. Significance is assessed at $p<0.05$.
+
+

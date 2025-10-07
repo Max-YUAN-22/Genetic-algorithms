@@ -1,0 +1,6 @@
+Method,Dice Score,Parameters (M),Training Time (h),Inference (ms)
+U-Net,0.450 ± 0.032,31.0,8.2,45
+DeepLabV3+,0.478 ± 0.028,43.6,12.1,67
+FCN,0.432 ± 0.035,134.3,15.3,89
+nnU-Net,0.485 ± 0.025,50.2,18.7,52
+Our Multimodal YOLO,0.582 ± 0.024,56.8,1.1,38

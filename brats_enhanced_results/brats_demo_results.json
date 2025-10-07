@@ -1,0 +1,148 @@
+{
+  "brats_integration": {
+    "status": "completed",
+    "total_cases": 1251,
+    "data_source": "real",
+    "sample_case": {
+      "case_id": "BraTS2021_00000",
+      "ct_shape": [
+        256,
+        256
+      ],
+      "mri_shape": [
+        256,
+        256
+      ],
+      "mask_shape": [
+        256,
+        256
+      ],
+      "unique_labels": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "splits": {
+      "train": 875,
+      "val": 187,
+      "test": 189
+    }
+  },
+  "multimodal_processing": {
+    "status": "completed",
+    "model_created": true,
+    "pytorch_available": true,
+    "input_shapes": {
+      "ct": [
+        256,
+        256
+      ],
+      "mri": [
+        256,
+        256
+      ]
+    },
+    "output_shapes": {
+      "segmentation": [
+        1,
+        4,
+        128,
+        128
+      ],
+      "uncertainty": [
+        1,
+        4,
+        128,
+        128
+      ]
+    },
+    "brats_case_processed": "BraTS2021_00000"
+  },
+  "genetic_optimization": {
+    "status": "completed",
+    "best_architecture": {
+      "backbone_channels": 32,
+      "fusion_type": "concat",
+      "num_attention_heads": 8,
+      "uncertainty_enabled": true,
+      "lr0": 0.009871104035078683,
+      "lrf": 0.0788444683218327,
+      "momentum": 0.7795575474048013,
+      "weight_decay": 0.0006414376226998265,
+      "warmup_epochs": 4.116589373149326,
+      "dice_weight": 0.6520400950099513,
+      "focal_weight": 0.2814940342183331,
+      "boundary_weight": 0.11768678603960865,
+      "aug_probability": 0.3494753271306396,
+      "elastic_alpha": 2919.7349295227727,
+      "noise_intensity": 0.05670927306081966,
+      "class_weights": [
+        0.10582623112230277,
+        1.140465900498293,
+        1.136951304906808,
+        2.068420147296997
+      ],
+      "bias_field_correction": true,
+      "skull_stripping": true
+    },
+    "best_fitness": 0.6275895578201609,
+    "brats_specific_objectives": {
+      "accuracy": 0.7281165009285937,
+      "efficiency": 0.22392725897047894,
+      "uncertainty": 0.8982522834692337
+    },
+    "generations_run": 3
+  },
+  "medical_evaluation": {
+    "status": "completed",
+    "cases_evaluated": 3,
+    "overall_metrics": {
+      "mean_dice": 0.0,
+      "std_dice": 0.0,
+      "median_dice": 0.0,
+      "min_dice": 0.0,
+      "max_dice": 0.0,
+      "num_cases": 3,
+      "WT_Dice_mean": 0.0,
+      "WT_Dice_std": 0.0,
+      "TC_Dice_mean": 0.0,
+      "TC_Dice_std": 0.0,
+      "ET_Dice_mean": 0.0,
+      "ET_Dice_std": 0.0,
+      "WT_Hausdorff95_mean": Infinity,
+      "WT_Hausdorff95_std": NaN,
+      "TC_Hausdorff95_mean": Infinity,
+      "TC_Hausdorff95_std": NaN,
+      "ET_Hausdorff95_mean": Infinity,
+      "ET_Hausdorff95_std": NaN
+    },
+    "brats_challenge_metrics": {
+      "WT_Dice": 0.0,
+      "WT_Sensitivity": 0.0,
+      "WT_Specificity": 0.9291381835936082,
+      "WT_Hausdorff95": Infinity,
+      "TC_Dice": 0.0,
+      "TC_Sensitivity": 0.0,
+      "TC_Specificity": 0.9522705078123548,
+      "TC_Hausdorff95": Infinity,
+      "ET_Dice": 0.0,
+      "ET_Sensitivity": 0.0,
+      "ET_Specificity": 0.9763336181639136,
+      "ET_Hausdorff95": Infinity
+    },
+    "evaluation_saved_to": "brats_enhanced_results/brats_evaluation"
+  },
+  "sota_comparison": {
+    "status": "completed",
+    "best_method": "ours_multimodal_ga",
+    "brats_cases_tested": 3,
+    "performance_summary": {
+      "ours_multimodal_ga": 0.0,
+      "nnu_net": 0.0,
+      "attention_unet": 0.0
+    },
+    "comparison_saved_to": "brats_enhanced_results/brats_sota_comparison"
+  }
+}

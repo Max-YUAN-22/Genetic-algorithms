@@ -1,0 +1,68 @@
+{
+  "evaluation_summary": {
+    "total_cases": 3,
+    "evaluation_date": "2025-10-06 16:28:02",
+    "mean_dice_coefficient": 0.13459056160016852,
+    "std_dice_coefficient": 0.19034361205396672,
+    "mean_sensitivity": 0.3332799594342639,
+    "mean_specificity": 0.666748409357969
+  },
+  "clinical_performance": {
+    "excellent_cases": 0,
+    "good_cases": 0,
+    "acceptable_cases": 0,
+    "poor_cases": 9
+  },
+  "case_details": [
+    {
+      "case_id": "demo_case_0",
+      "Core_dice": 0.0,
+      "Core_sensitivity": 0.0,
+      "Core_specificity": 0.9999999999991871,
+      "Edema_dice": 0.0,
+      "Edema_sensitivity": 0.0,
+      "Edema_specificity": 0.9999999999991829,
+      "Enhancing_dice": 0.40525803310593705,
+      "Enhancing_sensitivity": 0.9997597886115788,
+      "Enhancing_specificity": 0.0004909581867273619
+    },
+    {
+      "case_id": "demo_case_1",
+      "Core_dice": 0.0,
+      "Core_sensitivity": 0.0,
+      "Core_specificity": 0.999999999999186,
+      "Edema_dice": 0.0,
+      "Edema_sensitivity": 0.0,
+      "Edema_specificity": 0.999999999999188,
+      "Enhancing_dice": 0.4008199921903549,
+      "Enhancing_sensitivity": 0.9999999999975646,
+      "Enhancing_specificity": 0.00016289297931245894
+    },
+    {
+      "case_id": "demo_case_2",
+      "Core_dice": 0.0,
+      "Core_sensitivity": 0.0,
+      "Core_specificity": 0.9999999999991942,
+      "Edema_dice": 0.0,
+      "Edema_sensitivity": 0.0,
+      "Edema_specificity": 0.9999999999991863,
+      "Enhancing_dice": 0.40523702910522474,
+      "Enhancing_sensitivity": 0.9997598462992321,
+      "Enhancing_specificity": 8.183306055639784e-05
+    }
+  ],
+  "training_summary": {
+    "training_progression": {
+      "dice_scores": [
+        0.13459056160016852
+      ],
+      "dice_std": [
+        0.0006957264916311562
+      ],
+      "final_performance": 0.13459056160016852,
+      "improvement": 0.0,
+      "stability": Infinity
+    },
+    "total_cases_evaluated": 3
+  }
+}

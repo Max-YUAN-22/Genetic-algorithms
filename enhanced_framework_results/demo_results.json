@@ -1,0 +1,86 @@
+{
+  "preprocessing": {
+    "status": "completed",
+    "original_shape": [
+      256,
+      256
+    ],
+    "processed_shape": [
+      256,
+      256
+    ],
+    "normalization_applied": true,
+    "quality_score": 0.85
+  },
+  "genetic_optimization": {
+    "status": "completed",
+    "best_genes": {
+      "backbone_channels": 128,
+      "fusion_type": "concat",
+      "num_attention_heads": 4,
+      "uncertainty_enabled": true,
+      "lr0": 0.0009005180106715274,
+      "lrf": 0.08839230375978269,
+      "momentum": 0.7699518511253752,
+      "weight_decay": 0.0008999881172680205,
+      "warmup_epochs": 0.3565038404940052,
+      "dice_weight": 0.5943786161152935,
+      "focal_weight": 0.4600497704517954,
+      "boundary_weight": 0.19072143576172357,
+      "aug_probability": 0.3458139431293398,
+      "elastic_alpha": 2954.509532147982,
+      "noise_intensity": 0.12501278969842777,
+      "class_weights": [
+        0.14116406217616362,
+        1.13680033067074,
+        1.4954091230803406,
+        1.689208960787346
+      ],
+      "bias_field_correction": false,
+      "skull_stripping": false
+    },
+    "best_fitness": 0.641467042029729,
+    "objectives": {
+      "accuracy": 0.8873955274379155,
+      "efficiency": 0.13815351642847076,
+      "uncertainty": 0.7816161169111503
+    },
+    "generations_run": 5
+  },
+  "medical_evaluation": {
+    "status": "completed",
+    "batch_metrics": {
+      "mean_dice": 0.13459056160016852,
+      "std_dice": 0.0006957264916311562,
+      "median_dice": 0.13507900970174158,
+      "min_dice": 0.13360666406345165,
+      "max_dice": 0.13508601103531234,
+      "num_cases": 3,
+      "WT_Dice_mean": 0.8574324979896506,
+      "WT_Dice_std": 0.002628482305583008,
+      "TC_Dice_mean": 0.6668161575569242,
+      "TC_Dice_std": 0.0024577068840952875,
+      "ET_Dice_mean": 0.40377168480050557,
+      "ET_Dice_std": 0.0020871794748934876,
+      "WT_Hausdorff95_mean": 44.11210313506299,
+      "WT_Hausdorff95_std": 4.808571201673823,
+      "TC_Hausdorff95_mean": 43.98729836219351,
+      "TC_Hausdorff95_std": 4.876909827137928,
+      "ET_Hausdorff95_mean": 43.6677925872203,
+      "ET_Hausdorff95_std": 4.712452915793227
+    },
+    "clinical_summary": {
+      "total_cases": 3,
+      "mean_dice": 0.13459056160016852
+    }
+  },
+  "sota_comparison": {
+    "status": "completed",
+    "best_method": "attention_unet",
+    "performance_summary": {
+      "ours_multimodal_ga": 0.0,
+      "nnu_net": 0.0023783765651072806,
+      "attention_unet": 0.005467164764072671
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "final_test_dice": 0.009562937361936617,
+  "detailed_wt_tc_et": {
+    "mean_dice": 0.009562937361936617,
+    "std_dice": 0.009324043524437026,
+    "median_dice": 0.006736651062965393,
+    "min_dice": 0.0,
+    "max_dice": 0.0403849296271801,
+    "num_cases": 189,
+    "WT_Dice_mean": 0.05772446902481532,
+    "WT_Dice_std": 0.042277409598745465,
+    "TC_Dice_mean": 0.012138140130249246,
+    "TC_Dice_std": 0.022031664633640254,
+    "ET_Dice_mean": 8.600396050639176e-05,
+    "ET_Dice_std": 0.0011792268949967094,
+    "WT_Hausdorff95_mean": Infinity,
+    "WT_Hausdorff95_std": NaN,
+    "TC_Hausdorff95_mean": Infinity,
+    "TC_Hausdorff95_std": NaN,
+    "ET_Hausdorff95_mean": Infinity,
+    "ET_Hausdorff95_std": NaN
+  },
+  "config": {
+    "batch_size": 8,
+    "num_workers": 4,
+    "train_ratio": 0.7,
+    "val_ratio": 0.15,
+    "num_epochs": 150,
+    "learning_rate": 0.0001,
+    "weight_decay": 1e-05,
+    "early_stopping_patience": 20,
+    "gradient_clip_value": 1.0,
+    "num_classes": 4,
+    "input_size": [
+      256,
+      256
+    ],
+    "use_2_5d": true,
+    "stack_depth": 5,
+    "validate_every": 5,
+    "save_best_model": true,
+    "save_checkpoints": true,
+    "device": "mps",
+    "mixed_precision": true,
+    "reproducible_seed": 42,
+    "detailed_logging": true,
+    "calculate_brats_metrics": true
+  }
+}

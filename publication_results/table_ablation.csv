@@ -1,0 +1,6 @@
+Setting,WT Dice,TC Dice,ET Dice,Latency (ms)
+Full (CMA+GA),,,,
+No CMA (w/o cross-modal attn),,,,
+GA single objective (accuracy only),,,,
+No postprocess (raw),,,,
+

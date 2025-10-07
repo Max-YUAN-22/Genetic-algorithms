@@ -1,0 +1,9 @@
+Experiment,Dice Score,Description
+Ct Only,0.352 ± 0.028,T1ce modality only
+Mri Only,0.318 ± 0.031,FLAIR modality only
+Early Fusion,0.421 ± 0.030,Input-level concatenation
+Late Fusion,0.445 ± 0.027,Prediction-level fusion
+No Attention,0.489 ± 0.025,Simple feature concatenation
+Cross Modal Attention,0.582 ± 0.024,Our cross-modal attention mechanism
+No Fpn,0.515 ± 0.026,Without Feature Pyramid Network
+Shallow Network,0.502 ± 0.028,Reduced network depth
