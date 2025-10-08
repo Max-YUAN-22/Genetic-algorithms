@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BraTS 2021 Full Training Pipeline for SCI Q2+ Publication
+BraTS 2021 Full Training Pipeline for SCI Q2+ Publication.
 
 This script implements the complete training pipeline for our enhanced multimodal
 brain tumor segmentation framework using all 1,251 BraTS 2021 cases.
@@ -17,38 +17,40 @@ Usage:
 
 import argparse
 import json
-import time
 import logging
-import warnings
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-import numpy as np
-from dataclasses import dataclass
 import sys
+import time
+import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Optional
+
+import numpy as np
 
 # Import our framework components
 try:
-    from brats_simple_adapter import SimpleBraTSLoader, SimpleBraTSConfig
-    from multimodal_yolo_prototype import MultimodalYOLOSegmentation, MedicalSegmentationLoss
-    from enhanced_genetic_tuner import EnhancedGeneticTuner, MultiObjectiveConfig, Individual
-    from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
-    from sota_validation_pipeline import SOTAValidationPipeline, ValidationConfig
-    from medical_metrics import MedicalSegmentationMetrics
     import torch
     import torch.nn as nn
     import torch.optim as optim
-    from torch.utils.data import Dataset, DataLoader
+    from torch.utils.data import DataLoader, Dataset
+
+    from brats_simple_adapter import SimpleBraTSConfig, SimpleBraTSLoader
+    from enhanced_genetic_tuner import EnhancedGeneticTuner, Individual, MultiObjectiveConfig
+    from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
+    from medical_metrics import MedicalSegmentationMetrics
+    from multimodal_yolo_prototype import MedicalSegmentationLoss, MultimodalYOLOSegmentation
+    from sota_validation_pipeline import SOTAValidationPipeline, ValidationConfig
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Please ensure all framework components and PyTorch are available")
     sys.exit(1)
 
-warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 @dataclass
 class FullTrainingConfig:
-    """Configuration for full BraTS training pipeline"""
+    """Configuration for full BraTS training pipeline."""
 
     # Dataset configuration
     batch_size: int = 4
@@ -66,7 +68,7 @@ class FullTrainingConfig:
 
     # Model configuration
     num_classes: int = 4
-    input_size: Tuple[int, int] = (256, 256)
+    input_size: tuple[int, int] = (256, 256)
 
     # 2.5D configuration
     use_2_5d: bool = False
@@ -93,10 +95,11 @@ class FullTrainingConfig:
 
 
 class BraTSDataset(Dataset):
-    """PyTorch Dataset for BraTS data with full NIfTI support"""
+    """PyTorch Dataset for BraTS data with full NIfTI support."""
 
-    def __init__(self, case_ids: List[str], brats_loader: SimpleBraTSLoader,
-                 config: FullTrainingConfig, augment: bool = True):
+    def __init__(
+        self, case_ids: list[str], brats_loader: SimpleBraTSLoader, config: FullTrainingConfig, augment: bool = True
+    ):
         self.case_ids = case_ids
         self.brats_loader = brats_loader
         self.config = config
@@ -109,7 +112,7 @@ class BraTSDataset(Dataset):
             self._preload_cases()
 
     def _preload_cases(self):
-        """Pre-load cases into memory for faster training"""
+        """Pre-load cases into memory for faster training."""
         print(f"📦 Pre-loading {len(self.case_ids)} cases into memory...")
         for case_id in self.case_ids:
             try:
@@ -133,9 +136,9 @@ class BraTSDataset(Dataset):
             data = self.brats_loader.prepare_for_framework(case_data)
 
         # Extract modalities and mask
-        ct_image = data['ct'].astype(np.float32)
-        mri_image = data['mri'].astype(np.float32)
-        mask = data['mask'].astype(np.int64)
+        ct_image = data["ct"].astype(np.float32)
+        mri_image = data["mri"].astype(np.float32)
+        mask = data["mask"].astype(np.int64)
         # BraTS label mapping: {0,1,2,4} -> {0,1,2,3}
         mask[mask == 4] = 3
 
@@ -157,21 +160,18 @@ class BraTSDataset(Dataset):
         mri_tensor = torch.from_numpy(mri_image).unsqueeze(0)  # [1, H, W]
         mask_tensor = torch.from_numpy(mask)  # [H, W]
 
-        return {
-            'ct': ct_tensor,
-            'mri': mri_tensor,
-            'mask': mask_tensor,
-            'case_id': case_id
-        }
+        return {"ct": ct_tensor, "mri": mri_tensor, "mask": mask_tensor, "case_id": case_id}
 
     def _normalize_image(self, image: np.ndarray) -> np.ndarray:
-        """Normalize image to [0, 1] range"""
+        """Normalize image to [0, 1] range."""
         if image.max() > image.min():
             return (image - image.min()) / (image.max() - image.min())
         return image
 
-    def _apply_augmentation(self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Apply medical-specific data augmentation"""
+    def _apply_augmentation(
+        self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Apply medical-specific data augmentation."""
         # Random rotation
         if np.random.random() < 0.3:
             angle = np.random.uniform(-15, 15)
@@ -200,10 +200,13 @@ class BraTSDataset(Dataset):
 
         return ct, mri, mask
 
-    def _rotate_images(self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray, angle: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Rotate images and mask by given angle"""
+    def _rotate_images(
+        self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray, angle: float
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Rotate images and mask by given angle."""
         try:
             from scipy.ndimage import rotate
+
             ct_rot = rotate(ct, angle, reshape=False, order=1)
             mri_rot = rotate(mri, angle, reshape=False, order=1)
             mask_rot = rotate(mask, angle, reshape=False, order=0)  # Nearest neighbor for mask
@@ -236,7 +239,7 @@ class BraTSDataset(Dataset):
 
 
 class FullTrainingPipeline:
-    """Complete training pipeline for BraTS multimodal segmentation"""
+    """Complete training pipeline for BraTS multimodal segmentation."""
 
     def __init__(self, config: FullTrainingConfig, output_dir: str = "brats_full_training_results"):
         self.config = config
@@ -246,11 +249,8 @@ class FullTrainingPipeline:
         # Setup logging
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(self.output_dir / 'full_training.log'),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[logging.FileHandler(self.output_dir / "full_training.log"), logging.StreamHandler()],
         )
         self.logger = logging.getLogger(__name__)
 
@@ -270,28 +270,22 @@ class FullTrainingPipeline:
         self.training_history = []
         self.validation_history = []
 
-        self.logger.info(f"🚀 Full Training Pipeline initialized")
+        self.logger.info("🚀 Full Training Pipeline initialized")
         self.logger.info(f"📊 BraTS cases available: {len(self.brats_loader.case_list)}")
         self.logger.info(f"💾 Output directory: {self.output_dir}")
         self.logger.info(f"🔧 Device: {self.config.device}")
 
-    def prepare_datasets(self) -> Tuple[DataLoader, DataLoader, DataLoader]:
-        """Prepare train, validation, and test datasets"""
+    def prepare_datasets(self) -> tuple[DataLoader, DataLoader, DataLoader]:
+        """Prepare train, validation, and test datasets."""
         self.logger.info("📊 Preparing BraTS datasets...")
 
         # Get dataset splits
         splits = self.brats_loader.get_dataset_splits(self.config.train_ratio)
 
         # Create datasets
-        train_dataset = BraTSDataset(
-            splits['train'], self.brats_loader, self.config, augment=True
-        )
-        val_dataset = BraTSDataset(
-            splits['val'], self.brats_loader, self.config, augment=False
-        )
-        test_dataset = BraTSDataset(
-            splits['test'], self.brats_loader, self.config, augment=False
-        )
+        train_dataset = BraTSDataset(splits["train"], self.brats_loader, self.config, augment=True)
+        val_dataset = BraTSDataset(splits["val"], self.brats_loader, self.config, augment=False)
+        test_dataset = BraTSDataset(splits["test"], self.brats_loader, self.config, augment=False)
 
         # Create data loaders
         train_loader = DataLoader(
@@ -299,7 +293,7 @@ class FullTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=True,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False
+            pin_memory=True if self.config.device == "cuda" else False,
         )
 
         val_loader = DataLoader(
@@ -307,7 +301,7 @@ class FullTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False
+            pin_memory=True if self.config.device == "cuda" else False,
         )
 
         test_loader = DataLoader(
@@ -315,15 +309,17 @@ class FullTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False
+            pin_memory=True if self.config.device == "cuda" else False,
         )
 
-        self.logger.info(f"📈 Dataset sizes - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}")
+        self.logger.info(
+            f"📈 Dataset sizes - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}"
+        )
 
         return train_loader, val_loader, test_loader
 
     def initialize_model(self, individual: Optional[Individual] = None) -> None:
-        """Initialize model with optional genetic algorithm configuration"""
+        """Initialize model with optional genetic algorithm configuration."""
         self.logger.info("🧠 Initializing multimodal model...")
 
         # Create model
@@ -340,18 +336,16 @@ class FullTrainingPipeline:
 
         # Initialize optimizer
         self.optimizer = optim.AdamW(
-            self.model.parameters(),
-            lr=self.config.learning_rate,
-            weight_decay=self.config.weight_decay
+            self.model.parameters(), lr=self.config.learning_rate, weight_decay=self.config.weight_decay
         )
 
         # Initialize scheduler
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode='max', factor=0.5, patience=5, verbose=True
+            self.optimizer, mode="max", factor=0.5, patience=5, verbose=True
         )
 
         # Initialize mixed precision scaler
-        if self.config.mixed_precision and self.config.device == 'cuda':
+        if self.config.mixed_precision and self.config.device == "cuda":
             self.scaler = torch.cuda.amp.GradScaler()
 
         # Log model info
@@ -361,15 +355,15 @@ class FullTrainingPipeline:
         self.logger.info(f"📊 Model parameters - Total: {total_params:,}, Trainable: {trainable_params:,}")
 
     def _apply_ga_config(self, individual: Individual) -> None:
-        """Apply genetic algorithm configuration to model"""
+        """Apply genetic algorithm configuration to model."""
         genes = individual.genes
 
         # Apply architectural changes based on GA optimization
         # This would modify the model architecture based on the genetic algorithm results
         self.logger.info(f"🧬 Applying GA configuration: {genes}")
 
-    def train_epoch(self, train_loader: DataLoader) -> Dict[str, float]:
-        """Train for one epoch"""
+    def train_epoch(self, train_loader: DataLoader) -> dict[str, float]:
+        """Train for one epoch."""
         self.model.train()
 
         total_loss = 0.0
@@ -378,19 +372,19 @@ class FullTrainingPipeline:
 
         for batch_idx, batch in enumerate(train_loader):
             # Move to device
-            ct = batch['ct'].to(self.config.device)
-            mri = batch['mri'].to(self.config.device)
-            mask = batch['mask'].to(self.config.device)
+            ct = batch["ct"].to(self.config.device)
+            mri = batch["mri"].to(self.config.device)
+            mask = batch["mask"].to(self.config.device)
 
             # Zero gradients
             self.optimizer.zero_grad()
 
             # Forward pass with mixed precision if enabled
-            if self.config.mixed_precision and self.config.device == 'cuda':
+            if self.config.mixed_precision and self.config.device == "cuda":
                 with torch.cuda.amp.autocast():
                     outputs = self.model(ct, mri)
                     loss_dict = self.loss_fn(outputs, mask)
-                    loss = loss_dict['total_loss']
+                    loss = loss_dict["total_loss"]
 
                 # Backward pass with scaling
                 self.scaler.scale(loss).backward()
@@ -405,7 +399,7 @@ class FullTrainingPipeline:
             else:
                 outputs = self.model(ct, mri)
                 loss_dict = self.loss_fn(outputs, mask)
-                loss = loss_dict['total_loss']
+                loss = loss_dict["total_loss"]
 
                 # Backward pass
                 loss.backward()
@@ -420,8 +414,8 @@ class FullTrainingPipeline:
             total_loss += loss.item()
 
             # Calculate Dice score
-            if 'segmentation' in outputs:
-                pred = torch.argmax(outputs['segmentation'], dim=1)
+            if "segmentation" in outputs:
+                pred = torch.argmax(outputs["segmentation"], dim=1)
                 dice = self._calculate_dice_score(pred, mask)
                 total_dice += dice
 
@@ -431,13 +425,10 @@ class FullTrainingPipeline:
             if batch_idx % 50 == 0:
                 self.logger.info(f"Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}")
 
-        return {
-            'loss': total_loss / num_batches,
-            'dice': total_dice / num_batches
-        }
+        return {"loss": total_loss / num_batches, "dice": total_dice / num_batches}
 
-    def validate_epoch(self, val_loader: DataLoader) -> Dict[str, float]:
-        """Validate for one epoch"""
+    def validate_epoch(self, val_loader: DataLoader) -> dict[str, float]:
+        """Validate for one epoch."""
         self.model.eval()
 
         total_loss = 0.0
@@ -447,59 +438,58 @@ class FullTrainingPipeline:
         with torch.no_grad():
             for batch in val_loader:
                 # Move to device
-                ct = batch['ct'].to(self.config.device)
-                mri = batch['mri'].to(self.config.device)
-                mask = batch['mask'].to(self.config.device)
+                ct = batch["ct"].to(self.config.device)
+                mri = batch["mri"].to(self.config.device)
+                mask = batch["mask"].to(self.config.device)
 
                 # Forward pass
                 outputs = self.model(ct, mri)
                 loss_dict = self.loss_fn(outputs, mask)
-                loss = loss_dict['total_loss']
+                loss = loss_dict["total_loss"]
 
                 total_loss += loss.item()
 
                 # Calculate Dice score
-                if 'segmentation' in outputs:
-                    pred = torch.argmax(outputs['segmentation'], dim=1)
+                if "segmentation" in outputs:
+                    pred = torch.argmax(outputs["segmentation"], dim=1)
                     dice = self._calculate_dice_score(pred, mask)
                     total_dice += dice
 
                 num_batches += 1
 
-        return {
-            'loss': total_loss / num_batches,
-            'dice': total_dice / num_batches
-        }
+        return {"loss": total_loss / num_batches, "dice": total_dice / num_batches}
 
-    def evaluate_wt_tc_et(self, data_loader: DataLoader) -> Dict[str, float]:
+    def evaluate_wt_tc_et(self, data_loader: DataLoader) -> dict[str, float]:
         """Evaluate WT/TC/ET metrics with optional postprocessing."""
-        from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
         import numpy as np
+
+        from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
+
         cfg = EvaluationConfig(
             save_predictions=False,
             save_visualizations=False,
             calculate_brats_metrics=True,
             enable_postprocessing=True,
-            postprocess_params={'keep_largest_per_class': True, 'min_component_size': 80, 'closing_radius': 1}
+            postprocess_params={"keep_largest_per_class": True, "min_component_size": 80, "closing_radius": 1},
         )
-        evaluator = BrainTumorEvaluator(cfg, self.output_dir / 'evaluation_full')
+        evaluator = BrainTumorEvaluator(cfg, self.output_dir / "evaluation_full")
 
         preds = []
         gts = []
         case_ids = []
         with torch.no_grad():
             for batch in data_loader:
-                ct = batch['ct'].to(self.config.device)
-                mri = batch['mri'].to(self.config.device)
-                mask = batch['mask'].to(self.config.device)
+                ct = batch["ct"].to(self.config.device)
+                mri = batch["mri"].to(self.config.device)
+                mask = batch["mask"].to(self.config.device)
                 outputs = self.model(ct, mri)
-                if 'segmentation' in outputs:
-                    pred = torch.argmax(outputs['segmentation'], dim=1).cpu().numpy()
+                if "segmentation" in outputs:
+                    pred = torch.argmax(outputs["segmentation"], dim=1).cpu().numpy()
                 else:
                     pred = torch.zeros_like(mask).cpu().numpy()
                 preds.append(pred)
                 gts.append(mask.cpu().numpy())
-                case_ids.extend(batch['case_id'])
+                case_ids.extend(batch["case_id"])
 
         preds_np = np.concatenate(preds, axis=0)
         gts_np = np.concatenate(gts, axis=0)
@@ -507,7 +497,7 @@ class FullTrainingPipeline:
         return stats
 
     def _calculate_dice_score(self, pred: torch.Tensor, target: torch.Tensor) -> float:
-        """Calculate Dice score for batch"""
+        """Calculate Dice score for batch."""
         dice_scores = []
 
         for i in range(1, self.config.num_classes):  # Skip background
@@ -523,8 +513,8 @@ class FullTrainingPipeline:
 
         return np.mean(dice_scores) if dice_scores else 0.0
 
-    def train_full_model(self, train_loader: DataLoader, val_loader: DataLoader) -> Dict[str, Any]:
-        """Train the complete model"""
+    def train_full_model(self, train_loader: DataLoader, val_loader: DataLoader) -> dict[str, Any]:
+        """Train the complete model."""
         self.logger.info(f"🚀 Starting full model training for {self.config.num_epochs} epochs...")
 
         best_dice = 0.0
@@ -540,36 +530,38 @@ class FullTrainingPipeline:
             val_metrics = self.validate_epoch(val_loader)
 
             # Update scheduler
-            self.scheduler.step(val_metrics['dice'])
+            self.scheduler.step(val_metrics["dice"])
 
             # Log metrics
             epoch_time = time.time() - epoch_start_time
             self.logger.info(
-                f"Epoch {epoch+1}/{self.config.num_epochs} - "
+                f"Epoch {epoch + 1}/{self.config.num_epochs} - "
                 f"Train Loss: {train_metrics['loss']:.4f}, Train Dice: {train_metrics['dice']:.4f}, "
                 f"Val Loss: {val_metrics['loss']:.4f}, Val Dice: {val_metrics['dice']:.4f}, "
                 f"Time: {epoch_time:.2f}s"
             )
 
             # Save training history
-            self.training_history.append({
-                'epoch': epoch + 1,
-                'train_loss': train_metrics['loss'],
-                'train_dice': train_metrics['dice'],
-                'val_loss': val_metrics['loss'],
-                'val_dice': val_metrics['dice'],
-                'lr': self.optimizer.param_groups[0]['lr'],
-                'epoch_time': epoch_time
-            })
+            self.training_history.append(
+                {
+                    "epoch": epoch + 1,
+                    "train_loss": train_metrics["loss"],
+                    "train_dice": train_metrics["dice"],
+                    "val_loss": val_metrics["loss"],
+                    "val_dice": val_metrics["dice"],
+                    "lr": self.optimizer.param_groups[0]["lr"],
+                    "epoch_time": epoch_time,
+                }
+            )
 
             # Check for improvement
-            if val_metrics['dice'] > best_dice:
-                best_dice = val_metrics['dice']
+            if val_metrics["dice"] > best_dice:
+                best_dice = val_metrics["dice"]
                 epochs_without_improvement = 0
 
                 # Save best model
                 if self.config.save_best_model:
-                    self._save_model(epoch + 1, val_metrics['dice'], is_best=True)
+                    self._save_model(epoch + 1, val_metrics["dice"], is_best=True)
 
                 self.logger.info(f"🎯 New best validation Dice: {best_dice:.4f}")
             else:
@@ -582,44 +574,44 @@ class FullTrainingPipeline:
 
             # Save checkpoint
             if self.config.save_checkpoints and (epoch + 1) % 10 == 0:
-                self._save_model(epoch + 1, val_metrics['dice'], is_best=False)
+                self._save_model(epoch + 1, val_metrics["dice"], is_best=False)
 
         # Save training history
-        history_path = self.output_dir / 'training_history.json'
-        with open(history_path, 'w') as f:
+        history_path = self.output_dir / "training_history.json"
+        with open(history_path, "w") as f:
             json.dump(self.training_history, f, indent=2)
 
         self.logger.info(f"✅ Training completed! Best validation Dice: {best_dice:.4f}")
 
         return {
-            'best_dice': best_dice,
-            'total_epochs': len(self.training_history),
-            'training_history': self.training_history
+            "best_dice": best_dice,
+            "total_epochs": len(self.training_history),
+            "training_history": self.training_history,
         }
 
     def _save_model(self, epoch: int, dice_score: float, is_best: bool = False) -> None:
-        """Save model checkpoint"""
+        """Save model checkpoint."""
         checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'scheduler_state_dict': self.scheduler.state_dict(),
-            'dice_score': dice_score,
-            'training_history': self.training_history,
-            'config': self.config.__dict__
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "dice_score": dice_score,
+            "training_history": self.training_history,
+            "config": self.config.__dict__,
         }
 
         if is_best:
-            checkpoint_path = self.output_dir / 'best_model.pth'
+            checkpoint_path = self.output_dir / "best_model.pth"
             self.logger.info(f"💾 Saving best model to {checkpoint_path}")
         else:
-            checkpoint_path = self.output_dir / f'checkpoint_epoch_{epoch}.pth'
+            checkpoint_path = self.output_dir / f"checkpoint_epoch_{epoch}.pth"
             self.logger.info(f"💾 Saving checkpoint to {checkpoint_path}")
 
         torch.save(checkpoint, checkpoint_path)
 
-    def run_full_training(self) -> Dict[str, Any]:
-        """Run the complete training pipeline"""
+    def run_full_training(self) -> dict[str, Any]:
+        """Run the complete training pipeline."""
         start_time = time.time()
 
         # Prepare datasets
@@ -640,79 +632,61 @@ class FullTrainingPipeline:
         total_time = time.time() - start_time
 
         results = {
-            'training_results': training_results,
-            'test_results': test_results,
-            'total_training_time': total_time,
-            'config': self.config.__dict__
+            "training_results": training_results,
+            "test_results": test_results,
+            "total_training_time": total_time,
+            "config": self.config.__dict__,
         }
 
         # Save results
-        results_path = self.output_dir / 'full_training_results.json'
-        with open(results_path, 'w') as f:
+        results_path = self.output_dir / "full_training_results.json"
+        with open(results_path, "w") as f:
             json.dump(results, f, indent=2, default=str)
 
         self.logger.info(f"🎉 Full training pipeline completed in {total_time:.2f} seconds!")
         self.logger.info(f"📊 Final test Dice score: {test_results['dice']:.4f}")
-        if 'WT_Dice_mean' in detailed_stats:
+        if "WT_Dice_mean" in detailed_stats:
             self.logger.info(
-                f"📊 WT/TC/ET Dice (mean): WT={detailed_stats.get('WT_Dice_mean',0):.3f}, "
-                f"TC={detailed_stats.get('TC_Dice_mean',0):.3f}, ET={detailed_stats.get('ET_Dice_mean',0):.3f}"
+                f"📊 WT/TC/ET Dice (mean): WT={detailed_stats.get('WT_Dice_mean', 0):.3f}, "
+                f"TC={detailed_stats.get('TC_Dice_mean', 0):.3f}, ET={detailed_stats.get('ET_Dice_mean', 0):.3f}"
             )
 
         return results
 
 
 def main():
-    """Main entry point for full training pipeline"""
+    """Main entry point for full training pipeline."""
     parser = argparse.ArgumentParser(
         description="BraTS 2021 Full Training Pipeline for SCI Q2+ Publication",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
-        '--mode',
-        choices=['train', 'optimize', 'validate', 'full'],
-        default='train',
-        help='Pipeline mode (default: train)'
+        "--mode",
+        choices=["train", "optimize", "validate", "full"],
+        default="train",
+        help="Pipeline mode (default: train)",
     )
 
     parser.add_argument(
-        '--output_dir',
-        type=str,
-        default='brats_full_training_results',
-        help='Output directory for results'
+        "--output_dir", type=str, default="brats_full_training_results", help="Output directory for results"
     )
 
-    parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=4,
-        help='Batch size for training'
-    )
+    parser.add_argument("--batch_size", type=int, default=4, help="Batch size for training")
 
-    parser.add_argument(
-        '--num_epochs',
-        type=int,
-        default=100,
-        help='Number of training epochs'
-    )
+    parser.add_argument("--num_epochs", type=int, default=100, help="Number of training epochs")
 
-    parser.add_argument(
-        '--learning_rate',
-        type=float,
-        default=1e-4,
-        help='Learning rate'
-    )
+    parser.add_argument("--learning_rate", type=float, default=1e-4, help="Learning rate")
 
-    parser.add_argument('--device', type=str, default='auto', help='Device to use (auto, cpu, cuda)')
-    parser.add_argument('--use_2_5d', action='store_true', help='Enable 2.5D projection for 3D volumes')
-    parser.add_argument('--stack_depth', type=int, default=5, help='2.5D stack depth (odd number)')
+    parser.add_argument("--device", type=str, default="auto", help="Device to use (auto, cpu, cuda)")
+    parser.add_argument("--use_2_5d", action="store_true", help="Enable 2.5D projection for 3D volumes")
+    parser.add_argument("--stack_depth", type=int, default=5, help="2.5D stack depth (odd number)")
 
     args = parser.parse_args()
 
     # Configure device
-    if args.device == 'auto':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     else:
         device = args.device
 
@@ -732,23 +706,23 @@ def main():
         learning_rate=args.learning_rate,
         device=device,
         use_2_5d=args.use_2_5d,
-        stack_depth=args.stack_depth
+        stack_depth=args.stack_depth,
     )
 
     # Create pipeline
     pipeline = FullTrainingPipeline(config, args.output_dir)
 
     try:
-        if args.mode == 'train':
+        if args.mode == "train":
             results = pipeline.run_full_training()
             print(f"✅ Training completed! Best Dice: {results['training_results']['best_dice']:.4f}")
 
-        elif args.mode == 'full':
+        elif args.mode == "full":
             # Run complete pipeline including optimization and validation
             print("🚀 Running complete pipeline with optimization and validation...")
 
             # Step 1: Full training
-            training_results = pipeline.run_full_training()
+            pipeline.run_full_training()
 
             # TODO: Step 2: Genetic algorithm optimization
             # TODO: Step 3: Statistical validation
@@ -766,6 +740,7 @@ def main():
     except Exception as e:
         print(f"❌ Error during execution: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
