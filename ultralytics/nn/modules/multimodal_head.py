@@ -6,21 +6,18 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Dict, List, Tuple, Optional
 
-from .head import Segment
-from .conv import Conv
 from .block import Proto
+from .conv import Conv
+from .head import Segment
 
 
 class CrossModalAttention(nn.Module):
     """
     Cross-Modal Attention mechanism for CT-MRI feature fusion.
 
-    This module enables information exchange between CT and MRI feature representations
-    at the same spatial resolution, allowing the model to leverage complementary
-    information from both modalities.
+    This module enables information exchange between CT and MRI feature representations at the same spatial resolution,
+    allowing the model to leverage complementary information from both modalities.
     """
 
     def __init__(self, channels: int, num_heads: int = 8, dropout: float = 0.1):
@@ -28,7 +25,7 @@ class CrossModalAttention(nn.Module):
         self.channels = channels
         self.num_heads = num_heads
         self.head_dim = channels // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
 
         assert channels % num_heads == 0, "channels must be divisible by num_heads"
 
@@ -49,7 +46,7 @@ class CrossModalAttention(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(channels * 4, channels),
-            nn.Dropout(dropout)
+            nn.Dropout(dropout),
         )
 
     def forward(self, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -105,8 +102,7 @@ class MultiModalFusionModule(nn.Module):
     """
     Multi-modal fusion module that combines CT and MRI features.
 
-    Uses cross-modal attention for deep feature interaction followed by
-    feature aggregation and refinement.
+    Uses cross-modal attention for deep feature interaction followed by feature aggregation and refinement.
     """
 
     def __init__(self, channels: int, fusion_type: str = "attention"):
@@ -124,15 +120,12 @@ class MultiModalFusionModule(nn.Module):
                 Conv(channels * 2, channels, 1),
                 Conv(channels, channels, 3),
                 nn.BatchNorm2d(channels),
-                nn.SiLU(inplace=True)
+                nn.SiLU(inplace=True),
             )
 
         elif fusion_type == "concat":
             # Simple concatenation + convolution
-            self.fusion_conv = nn.Sequential(
-                Conv(channels * 2, channels, 1),
-                Conv(channels, channels, 3)
-            )
+            self.fusion_conv = nn.Sequential(Conv(channels * 2, channels, 1), Conv(channels, channels, 3))
 
         elif fusion_type == "add":
             # Element-wise addition with weighting
@@ -180,8 +173,8 @@ class MultiModalSegment(Segment):
     """
     Enhanced YOLO Segment head for multimodal brain tumor segmentation.
 
-    Extends the standard YOLO segmentation head to handle CT+MRI inputs
-    with cross-modal attention and medical-specific optimizations.
+    Extends the standard YOLO segmentation head to handle CT+MRI inputs with cross-modal attention and medical-specific
+    optimizations.
     """
 
     def __init__(self, nc=80, nm=32, npr=256, ch=(), fusion_type="attention", uncertainty=False):
@@ -202,30 +195,19 @@ class MultiModalSegment(Segment):
         self.uncertainty = uncertainty
 
         # Multi-modal fusion modules for each scale
-        self.fusion_modules = nn.ModuleList([
-            MultiModalFusionModule(c, fusion_type) for c in ch
-        ])
+        self.fusion_modules = nn.ModuleList([MultiModalFusionModule(c, fusion_type) for c in ch])
 
         # Uncertainty estimation head (if enabled)
         if uncertainty:
-            self.uncertainty_convs = nn.ModuleList([
-                nn.Sequential(
-                    Conv(c, c // 2, 3),
-                    Conv(c // 2, nc, 1)
-                ) for c in ch
-            ])
+            self.uncertainty_convs = nn.ModuleList([nn.Sequential(Conv(c, c // 2, 3), Conv(c // 2, nc, 1)) for c in ch])
 
         # Medical-specific prototype generation
         self.medical_proto = Proto(ch[0], npr, nm)
 
         # Attention weights for combining multi-scale features
-        self.scale_attention = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(len(ch), len(ch), 1),
-            nn.Sigmoid()
-        )
+        self.scale_attention = nn.Sequential(nn.AdaptiveAvgPool2d(1), nn.Conv2d(len(ch), len(ch), 1), nn.Sigmoid())
 
-    def forward(self, ct_features: List[torch.Tensor], mri_features: List[torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, ct_features: list[torch.Tensor], mri_features: list[torch.Tensor]) -> dict[str, torch.Tensor]:
         """
         Forward pass for multimodal segmentation.
 
@@ -252,10 +234,7 @@ class MultiModalSegment(Segment):
         # Generate prototypes using the largest feature map
         proto = self.medical_proto(fused_features[0])
 
-        results = {
-            'predictions': p,
-            'prototypes': proto
-        }
+        results = {"predictions": p, "prototypes": proto}
 
         # Add uncertainty estimation if enabled
         if self.uncertainty:
@@ -263,12 +242,13 @@ class MultiModalSegment(Segment):
             for i, x in enumerate(fused_features):
                 uncertainty_map = self.uncertainty_convs[i](x)
                 uncertainty_maps.append(uncertainty_map)
-            results['uncertainty'] = uncertainty_maps
+            results["uncertainty"] = uncertainty_maps
 
         return results
 
-    def get_attention_maps(self, ct_features: List[torch.Tensor],
-                          mri_features: List[torch.Tensor]) -> List[torch.Tensor]:
+    def get_attention_maps(
+        self, ct_features: list[torch.Tensor], mri_features: list[torch.Tensor]
+    ) -> list[torch.Tensor]:
         """
         Extract attention maps for visualization and analysis.
 
@@ -284,7 +264,7 @@ class MultiModalSegment(Segment):
         for i, (ct_feat, mri_feat) in enumerate(zip(ct_features, mri_features)):
             if self.fusion_type == "attention":
                 fusion_module = self.fusion_modules[i]
-                if hasattr(fusion_module, 'ct_to_mri_attention'):
+                if hasattr(fusion_module, "ct_to_mri_attention"):
                     # Get attention weights from cross-modal attention
                     B, C, H, W = ct_feat.shape
                     ct_flat = ct_feat.view(B, C, H * W).permute(0, 2, 1)
@@ -320,7 +300,7 @@ class BrainTumorLoss(nn.Module):
     - Uncertainty regularization
     """
 
-    def __init__(self, num_classes: int = 4, class_weights: Optional[List[float]] = None):
+    def __init__(self, num_classes: int = 4, class_weights: list[float] | None = None):
         super().__init__()
         self.num_classes = num_classes
 
@@ -329,10 +309,10 @@ class BrainTumorLoss(nn.Module):
             # Default weights: less weight for background, more for tumor regions
             class_weights = [0.1, 1.0, 1.5, 2.0]  # background, core, edema, enhancing
 
-        self.register_buffer('class_weights', torch.tensor(class_weights))
+        self.register_buffer("class_weights", torch.tensor(class_weights))
 
     def dice_loss(self, pred: torch.Tensor, target: torch.Tensor, smooth: float = 1e-6) -> torch.Tensor:
-        """Multi-class Dice loss"""
+        """Multi-class Dice loss."""
         pred = F.softmax(pred, dim=1)
         target_one_hot = F.one_hot(target, self.num_classes).permute(0, 3, 1, 2).float()
 
@@ -349,16 +329,17 @@ class BrainTumorLoss(nn.Module):
 
         return 1.0 - torch.stack(dice_scores, dim=1).mean()
 
-    def focal_loss(self, pred: torch.Tensor, target: torch.Tensor,
-                   alpha: float = 0.25, gamma: float = 2.0) -> torch.Tensor:
-        """Focal loss for addressing class imbalance"""
-        ce_loss = F.cross_entropy(pred, target, reduction='none', weight=self.class_weights)
+    def focal_loss(
+        self, pred: torch.Tensor, target: torch.Tensor, alpha: float = 0.25, gamma: float = 2.0
+    ) -> torch.Tensor:
+        """Focal loss for addressing class imbalance."""
+        ce_loss = F.cross_entropy(pred, target, reduction="none", weight=self.class_weights)
         pt = torch.exp(-ce_loss)
         focal_loss = alpha * (1 - pt) ** gamma * ce_loss
         return focal_loss.mean()
 
     def boundary_loss(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        """Boundary loss for edge preservation"""
+        """Boundary loss for edge preservation."""
         pred_soft = F.softmax(pred, dim=1)
 
         # Compute gradients
@@ -372,7 +353,7 @@ class BrainTumorLoss(nn.Module):
         boundary_loss = F.mse_loss(pred_grad_x, target_grad_x) + F.mse_loss(pred_grad_y, target_grad_y)
         return boundary_loss
 
-    def forward(self, predictions: Dict[str, torch.Tensor], targets: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, predictions: dict[str, torch.Tensor], targets: torch.Tensor) -> dict[str, torch.Tensor]:
         """
         Compute total loss.
 
@@ -383,14 +364,14 @@ class BrainTumorLoss(nn.Module):
         Returns:
             Dictionary of loss components
         """
-        pred = predictions['predictions'][0]  # Use first prediction scale
+        pred = predictions["predictions"][0]  # Use first prediction scale
 
         # Resize prediction to match target if needed
         if pred.shape[-2:] != targets.shape[-2:]:
-            pred = F.interpolate(pred, size=targets.shape[-2:], mode='bilinear', align_corners=False)
+            pred = F.interpolate(pred, size=targets.shape[-2:], mode="bilinear", align_corners=False)
 
         # Extract segmentation logits (assuming they're in the prediction)
-        seg_pred = pred[:, :self.num_classes]  # First nc channels are segmentation
+        seg_pred = pred[:, : self.num_classes]  # First nc channels are segmentation
 
         # Compute loss components
         dice_loss = self.dice_loss(seg_pred, targets)
@@ -401,12 +382,12 @@ class BrainTumorLoss(nn.Module):
         total_loss = dice_loss + 0.5 * focal_loss + 0.1 * boundary_loss
 
         return {
-            'total_loss': total_loss,
-            'dice_loss': dice_loss,
-            'focal_loss': focal_loss,
-            'boundary_loss': boundary_loss
+            "total_loss": total_loss,
+            "dice_loss": dice_loss,
+            "focal_loss": focal_loss,
+            "boundary_loss": boundary_loss,
         }
 
 
 # Export the new classes
-__all__ = ['CrossModalAttention', 'MultiModalFusionModule', 'MultiModalSegment', 'BrainTumorLoss']
+__all__ = ["CrossModalAttention", "MultiModalFusionModule", "MultiModalSegment", "BrainTumorLoss"]

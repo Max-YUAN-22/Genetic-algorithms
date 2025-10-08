@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
-CT/MRI Pairwise Registration and Fusion Utility
+CT/MRI Pairwise Registration and Fusion Utility.
 
 This script performs pairwise registration between CT (fixed) and MRI (moving) images,
 warps MRI (and optional MRI-space masks) into CT space, and saves fused training images.
@@ -38,9 +37,7 @@ Example usage:
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
-from typing import Tuple, Optional
 
 import cv2
 import numpy as np
@@ -63,7 +60,7 @@ def minmax_normalize(img: np.ndarray) -> np.ndarray:
     return img
 
 
-def clahe_enhance(img: np.ndarray, clip_limit: float = 2.0, tile_grid_size: Tuple[int, int] = (8, 8)) -> np.ndarray:
+def clahe_enhance(img: np.ndarray, clip_limit: float = 2.0, tile_grid_size: tuple[int, int] = (8, 8)) -> np.ndarray:
     img_u8 = (np.clip(img, 0, 1) * 255).astype(np.uint8)
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     return clahe.apply(img_u8).astype(np.uint8)
@@ -74,10 +71,11 @@ def ecc_register_affine(
     fixed: np.ndarray,
     number_of_iterations: int = 300,
     termination_eps: float = 1e-6,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Register moving -> fixed using OpenCV ECC with affine model.
-    Returns (warped_moving, 2x3 affine)
+
+    Returns (warped_moving, 2x3 affine).
     """
     if moving.ndim != 2 or fixed.ndim != 2:
         raise ValueError("ECC registration expects single-channel images.")
@@ -108,7 +106,7 @@ def ecc_register_affine(
     return warped, warp_matrix
 
 
-def warp_mask_affine(mask: np.ndarray, warp_matrix: np.ndarray, shape_wh: Tuple[int, int]) -> np.ndarray:
+def warp_mask_affine(mask: np.ndarray, warp_matrix: np.ndarray, shape_wh: tuple[int, int]) -> np.ndarray:
     w, h = shape_wh
     return cv2.warpAffine(mask, warp_matrix, (w, h), flags=cv2.INTER_NEAREST)
 
@@ -135,7 +133,7 @@ def fuse_images(
     if method == "stack":
         ct_f = minmax_normalize(ct_u8)
         mri_f = minmax_normalize(mri_aligned_u8)
-        avg = ((ct_f + mri_f) * 0.5)
+        avg = (ct_f + mri_f) * 0.5
         # Optionally enhance CT as first channel with CLAHE for contrast
         ct_enh = clahe_enhance(ct_f)
         avg_u8 = (np.clip(avg, 0, 1) * 255).astype(np.uint8)
@@ -148,9 +146,13 @@ def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def pair_by_stem(ct_dir: Path, mri_dir: Path) -> list[Tuple[Path, Path]]:
-    ct_map = {p.stem: p for p in sorted(ct_dir.glob("*")) if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff")}
-    mri_map = {p.stem: p for p in sorted(mri_dir.glob("*")) if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff")}
+def pair_by_stem(ct_dir: Path, mri_dir: Path) -> list[tuple[Path, Path]]:
+    ct_map = {
+        p.stem: p for p in sorted(ct_dir.glob("*")) if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff")
+    }
+    mri_map = {
+        p.stem: p for p in sorted(mri_dir.glob("*")) if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff")
+    }
     pairs = []
     for k, v in ct_map.items():
         if k in mri_map:
@@ -162,12 +164,35 @@ def main():
     parser = argparse.ArgumentParser(description="CT/MRI registration and fusion into CT space")
     parser.add_argument("--ct_dir", type=str, required=True, help="Directory of CT images (fixed/reference)")
     parser.add_argument("--mri_dir", type=str, required=True, help="Directory of MRI images (moving)")
-    parser.add_argument("--out_root", type=str, required=True, help="Output root directory (will create images/ and optional labels/")
-    parser.add_argument("--labels_dir", type=str, default="", help="Optional labels directory already in CT space (YOLO .txt). Will be copied by stem.")
-    parser.add_argument("--mri_masks_dir", type=str, default="", help="Optional MRI-space binary masks to warp into CT space.")
-    parser.add_argument("--masks_source", type=str, choices=["ct", "mri"], default="ct", help="Where masks/labels are defined. 'ct' means labels_dir is in CT space (no warp). 'mri' means mri_masks_dir will be warped.")
-    parser.add_argument("--fusion_method", type=str, choices=["stack", "avg"], default="stack", help="Fusion method for output image")
-    parser.add_argument("--resize", type=int, nargs=2, default=None, help="Optional resize (W H) applied to CT and MRI before registration")
+    parser.add_argument(
+        "--out_root", type=str, required=True, help="Output root directory (will create images/ and optional labels/"
+    )
+    parser.add_argument(
+        "--labels_dir",
+        type=str,
+        default="",
+        help="Optional labels directory already in CT space (YOLO .txt). Will be copied by stem.",
+    )
+    parser.add_argument(
+        "--mri_masks_dir", type=str, default="", help="Optional MRI-space binary masks to warp into CT space."
+    )
+    parser.add_argument(
+        "--masks_source",
+        type=str,
+        choices=["ct", "mri"],
+        default="ct",
+        help="Where masks/labels are defined. 'ct' means labels_dir is in CT space (no warp). 'mri' means mri_masks_dir will be warped.",
+    )
+    parser.add_argument(
+        "--fusion_method", type=str, choices=["stack", "avg"], default="stack", help="Fusion method for output image"
+    )
+    parser.add_argument(
+        "--resize",
+        type=int,
+        nargs=2,
+        default=None,
+        help="Optional resize (W H) applied to CT and MRI before registration",
+    )
     parser.add_argument("--suffix", type=str, default="", help="Optional suffix added to output image stems")
 
     args = parser.parse_args()
@@ -175,8 +200,8 @@ def main():
     ct_dir = Path(args.ct_dir)
     mri_dir = Path(args.mri_dir)
     out_root = Path(args.out_root)
-    labels_dir: Optional[Path] = Path(args.labels_dir) if args.labels_dir else None
-    mri_masks_dir: Optional[Path] = Path(args.mri_masks_dir) if args.mri_masks_dir else None
+    labels_dir: Path | None = Path(args.labels_dir) if args.labels_dir else None
+    mri_masks_dir: Path | None = Path(args.mri_masks_dir) if args.mri_masks_dir else None
 
     out_images = out_root / "images"
     out_labels = out_root / "labels" if (labels_dir or mri_masks_dir) else None
@@ -252,12 +277,10 @@ def main():
     print(f"Done. Saved fused images to: {out_images}")
     if out_labels is not None:
         print(f"Labels/Masks saved to: {out_labels}")
-    print(f"Pairs processed: {len(pairs)}, registered: {warped_count}, labels copied: {copied_labels}, masks warped: {warped_masks}")
+    print(
+        f"Pairs processed: {len(pairs)}, registered: {warped_count}, labels copied: {copied_labels}, masks warped: {warped_masks}"
+    )
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
