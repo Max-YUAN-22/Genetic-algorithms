@@ -1,4 +1,19 @@
-% Methods and Experiments (LaTeX-ready)
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Methods and Experiments}
+\author{Genetic Algorithm Enhanced Multimodal Brain Tumor Segmentation}
+\date{\today}
+
+\begin{document}
+\maketitle
+
 \section{Methods}
 \subsection{Architecture}
 We adopt a YOLO-style encoder-decoder with a segmentation head tailored for multimodal inputs. Two modality-specific streams (CT and MRI) process inputs in parallel, and their features are fused via a cross-modal attention (CMA) module at multiple scales.
@@ -27,4 +42,4 @@ Reproducibility is ensured by global seeding, MLflow logging, and environment me
 \subsection{Statistical Significance}
 We conduct Welch's t-tests for repeated experiments and report Cohen's $d$ as effect size. Significance is assessed at $p<0.05$.
 
-
+\end{document}
