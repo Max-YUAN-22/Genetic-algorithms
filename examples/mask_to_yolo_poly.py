@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Convert binary tumor masks to YOLO segmentation polygon labels.
@@ -26,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Tuple
 
 import cv2
 import numpy as np
@@ -40,7 +38,7 @@ def find_mask_file(stem: str, mask_dir: Path) -> Path | None:
     return None
 
 
-def load_image_size(img_dir: Path, stem: str) -> Tuple[int, int]:
+def load_image_size(img_dir: Path, stem: str) -> tuple[int, int]:
     for ext in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         p = img_dir / f"{stem}{ext}"
         if p.exists():
@@ -68,7 +66,7 @@ def mask_to_polygons(mask: np.ndarray, approx_epsilon: float = 0.002, min_points
     return polys
 
 
-def write_yolo_seg(label_path: Path, polys: list[np.ndarray], class_id: int, size_wh: Tuple[int, int]):
+def write_yolo_seg(label_path: Path, polys: list[np.ndarray], class_id: int, size_wh: tuple[int, int]):
     w, h = size_wh
     lines = []
     for poly in polys:
@@ -119,7 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
