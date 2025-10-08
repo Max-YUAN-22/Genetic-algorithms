@@ -9,6 +9,7 @@
 - [ ] **BRaTS 2019**: 335个训练案例  
 - [ ] **BRaTS 2020**: 369个训练案例（已使用）
 - [ ] **BRaTS 2021**: 1251个训练案例
+- [ ] **RSNA Intracranial Aneurysm Detection**: 多模态脑部影像数据（CTA, MRA, MRI）
 - [ ] **TCIA Brain Tumor**: 多个脑肿瘤数据集
 
 #### 其他医学分割数据集
@@ -99,6 +100,19 @@ def cross_modality_validation():
 - BRaTS 2018: Dice > 0.80
 - BRaTS 2019: Dice > 0.82  
 - BRaTS 2021: Dice > 0.85
+
+#### 实验1.5: RSNA动脉瘤检测验证
+**目标**: 验证方法在脑动脉瘤检测任务上的泛化性
+
+**数据集**:
+- RSNA Intracranial Aneurysm Detection (多模态: CTA, MRA, MRI)
+- 来自18个不同机构的真实临床数据
+- 包含不同扫描仪和成像协议
+
+**预期结果**:
+- 动脉瘤检测: AUC > 0.85
+- 多模态融合效果: 优于单模态
+- 跨机构泛化性: 性能下降 < 5%
 
 #### 实验2: 跨器官泛化验证
 **目标**: 验证方法在其他器官上的泛化能力

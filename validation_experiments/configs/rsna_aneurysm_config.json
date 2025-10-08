@@ -1,0 +1,44 @@
+{
+  "experiment_name": "rsna_aneurysm_validation",
+  "description": "RSNA动脉瘤检测验证实验",
+  "dataset_info": {
+    "name": "RSNA Intracranial Aneurysm Detection",
+    "url": "https://www.kaggle.com/competitions/rsna-intracranial-aneurysm-detection",
+    "modalities": ["CTA", "MRA", "T1_post", "T2"],
+    "institutions": 18,
+    "total_cases": 1000,
+    "task": "aneurysm_detection"
+  },
+  "experiment_type": "cross_domain_validation",
+  "pretrain_dataset": "brats_2020",
+  "adaptation_strategy": "fine_tuning",
+  "evaluation_metrics": {
+    "primary": "weighted_auc",
+    "secondary": ["aneurysm_present_auc", "location_aucs", "cross_institution_std"]
+  },
+  "expected_results": {
+    "final_score": 0.85,
+    "aneurysm_present_auc": 0.88,
+    "location_detection_auc": 0.82,
+    "cross_institution_std": 0.05
+  },
+  "clinical_relevance": {
+    "disease": "intracranial_aneurysm",
+    "prevalence": "3% of global population",
+    "mortality": "500,000 deaths annually",
+    "clinical_impact": "early_detection_critical"
+  },
+  "advantages": [
+    "Real clinical data from 18 institutions",
+    "Multiple imaging modalities (CTA, MRA, MRI)",
+    "Expert annotations by neuroradiologists",
+    "Diverse scanners and imaging protocols",
+    "Large-scale dataset with statistical power"
+  ],
+  "validation_goals": [
+    "Verify cross-modal attention effectiveness",
+    "Test cross-institution generalization",
+    "Validate clinical applicability",
+    "Demonstrate method robustness"
+  ]
+}

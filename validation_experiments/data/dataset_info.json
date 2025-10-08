@@ -71,5 +71,19 @@
       "CT"
     ],
     "task": "kidney_tumor_segmentation"
+  },
+  "rsna_aneurysm": {
+    "url": "https://www.kaggle.com/competitions/rsna-intracranial-aneurysm-detection",
+    "description": "RSNA Intracranial Aneurysm Detection - 1000+ multimodal brain cases",
+    "modalities": [
+      "CTA",
+      "MRA", 
+      "T1_post",
+      "T2"
+    ],
+    "task": "aneurysm_detection",
+    "institutions": 18,
+    "clinical_relevance": "high",
+    "expert_annotations": true
   }
 }

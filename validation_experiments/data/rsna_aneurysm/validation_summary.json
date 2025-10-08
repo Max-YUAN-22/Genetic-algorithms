@@ -1,0 +1,30 @@
+{
+  "dataset_name": "RSNA Intracranial Aneurysm Detection",
+  "validation_type": "cross_domain_clinical_validation",
+  "key_advantages": [
+    "Real clinical data from 18 institutions",
+    "Multiple imaging modalities (CTA, MRA, T1 post, T2)",
+    "Expert annotations by neuroradiologists",
+    "Diverse scanners and imaging protocols",
+    "Large-scale dataset with statistical power",
+    "High clinical relevance (aneurysm detection)"
+  ],
+  "validation_goals": [
+    "Verify cross-modal attention mechanism effectiveness",
+    "Test cross-institution generalization capability",
+    "Validate clinical applicability and robustness",
+    "Demonstrate method performance on real clinical data"
+  ],
+  "expected_benefits": [
+    "Strong evidence for cross-modal fusion",
+    "Proof of cross-institution generalization",
+    "Clinical relevance validation",
+    "Robustness demonstration"
+  ],
+  "target_metrics": {
+    "final_score": "> 0.85",
+    "aneurysm_present_auc": "> 0.88",
+    "location_detection_auc": "> 0.82",
+    "cross_institution_std": "< 0.05"
+  }
+}
