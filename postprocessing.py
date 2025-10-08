@@ -2,17 +2,17 @@
 """
 Postprocessing utilities for medical image segmentation (brain tumor).
 
-Functions here operate on discrete label maps (H, W) or (D, H, W) and are
-designed to improve WT/TC/ET metrics by removing noise, filling small holes,
-and enforcing simple anatomical plausibility constraints.
+Functions here operate on discrete label maps (H, W) or (D, H, W) and are designed to improve WT/TC/ET metrics by
+removing noise, filling small holes, and enforcing simple anatomical plausibility constraints.
 """
 
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional
+
 import numpy as np
 
 try:
-    from scipy.ndimage import label as cc_label, binary_fill_holes, binary_opening, binary_closing
-    from scipy.ndimage import generate_binary_structure
+    from scipy.ndimage import binary_closing, binary_fill_holes, binary_opening, generate_binary_structure
+    from scipy.ndimage import label as cc_label
 except Exception:
     cc_label = None
     binary_fill_holes = None
@@ -31,7 +31,7 @@ class PostprocessConfig:
         opening_radius: int = 0,
         closing_radius: int = 1,
         keep_largest_per_class: bool = False,
-        apply_to_regions: Tuple[int, ...] = (1, 2, 3),
+        apply_to_regions: tuple[int, ...] = (1, 2, 3),
         is_3d: bool = False,
     ) -> None:
         self.min_component_size = min_component_size
@@ -124,6 +124,7 @@ def postprocess_segmentation(pred: np.ndarray, config: Optional[PostprocessConfi
 def postprocess_wt_tc_et(pred: np.ndarray, config: Optional[PostprocessConfig] = None) -> np.ndarray:
     """
     Focused postprocessing tailored for BraTS WT/TC/ET targets.
+
     Applies stronger filtering on ET to stabilize HD95 and removes scattered noise from WT/TC.
     """
     if config is None:
@@ -133,7 +134,11 @@ def postprocess_wt_tc_et(pred: np.ndarray, config: Optional[PostprocessConfig] =
     out = pred.copy()
 
     # Whole Tumor (WT) uses union of all tumor classes; here we treat per-class
-    class_specific_min = {1: max(30, config.min_component_size), 2: max(50, config.min_component_size), 3: max(20, config.min_component_size)}
+    class_specific_min = {
+        1: max(30, config.min_component_size),
+        2: max(50, config.min_component_size),
+        3: max(20, config.min_component_size),
+    }
 
     for cls, min_size in class_specific_min.items():
         local_cfg = PostprocessConfig(
@@ -153,6 +158,3 @@ def postprocess_wt_tc_et(pred: np.ndarray, config: Optional[PostprocessConfig] =
         out[binary.astype(bool)] = cls
 
     return out.astype(np.uint8)
-
-
-

@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 
@@ -23,5 +22,3 @@ def test_demo_runs(tmp_path: Path):
     assert demo_json.exists()
     data = json.loads(demo_json.read_text())
     assert "medical_evaluation" in data
-
-

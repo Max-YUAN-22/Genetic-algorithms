@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """
-Medical Image Segmentation Metrics for Brain Tumor Analysis
+Medical Image Segmentation Metrics for Brain Tumor Analysis.
 
-Comprehensive evaluation metrics specifically designed for medical image segmentation,
-including clinically relevant measures for brain tumor assessment.
+Comprehensive evaluation metrics specifically designed for medical image segmentation, including clinically relevant
+measures for brain tumor assessment.
 
-This module provides SCI Q2+ quality evaluation metrics that are essential for
-medical image analysis publications.
+This module provides SCI Q2+ quality evaluation metrics that are essential for medical image analysis publications.
 """
 
+from typing import Union
+
 import numpy as np
-import torch
 from scipy import ndimage
 from scipy.spatial.distance import directed_hausdorff
-from typing import Dict, List, Tuple, Union
-import warnings
 
 
 class MedicalSegmentationMetrics:
@@ -24,7 +22,7 @@ class MedicalSegmentationMetrics:
     Implements clinically relevant metrics used in top-tier medical imaging journals.
     """
 
-    def __init__(self, num_classes: int = 4, class_names: List[str] = None):
+    def __init__(self, num_classes: int = 4, class_names: list[str] = None):
         """
         Initialize medical metrics calculator.
 
@@ -33,7 +31,7 @@ class MedicalSegmentationMetrics:
             class_names: Names of segmentation classes
         """
         self.num_classes = num_classes
-        self.class_names = class_names or ['Background', 'Core', 'Edema', 'Enhancing']
+        self.class_names = class_names or ["Background", "Core", "Edema", "Enhancing"]
 
     def dice_coefficient(self, pred: np.ndarray, target: np.ndarray, class_idx: int = None) -> Union[float, np.ndarray]:
         """
@@ -94,7 +92,9 @@ class MedicalSegmentationMetrics:
 
         return np.array(jaccard_scores)
 
-    def sensitivity_recall(self, pred: np.ndarray, target: np.ndarray, class_idx: int = None) -> Union[float, np.ndarray]:
+    def sensitivity_recall(
+        self, pred: np.ndarray, target: np.ndarray, class_idx: int = None
+    ) -> Union[float, np.ndarray]:
         """
         Calculate Sensitivity (Recall/True Positive Rate).
 
@@ -154,8 +154,9 @@ class MedicalSegmentationMetrics:
 
         return np.array(specificity_scores)
 
-    def hausdorff_distance(self, pred: np.ndarray, target: np.ndarray,
-                          class_idx: int = None, percentile: int = 95) -> Union[float, np.ndarray]:
+    def hausdorff_distance(
+        self, pred: np.ndarray, target: np.ndarray, class_idx: int = None, percentile: int = 95
+    ) -> Union[float, np.ndarray]:
         """
         Calculate Hausdorff Distance (HD95).
 
@@ -171,26 +172,29 @@ class MedicalSegmentationMetrics:
         Returns:
             Hausdorff distance(s) in mm
         """
+
         def _hausdorff_distance_single(pred_mask: np.ndarray, target_mask: np.ndarray) -> float:
             if np.sum(pred_mask) == 0 or np.sum(target_mask) == 0:
-                return float('inf')
+                return float("inf")
 
             # Get surface points
             pred_surface = self._get_surface_points(pred_mask)
             target_surface = self._get_surface_points(target_mask)
 
             if len(pred_surface) == 0 or len(target_surface) == 0:
-                return float('inf')
+                return float("inf")
 
             # Calculate directed Hausdorff distances
-            hd1 = directed_hausdorff(pred_surface, target_surface)[0]
-            hd2 = directed_hausdorff(target_surface, pred_surface)[0]
+            directed_hausdorff(pred_surface, target_surface)[0]
+            directed_hausdorff(target_surface, pred_surface)[0]
 
             # Return 95th percentile
-            distances = np.concatenate([
-                np.min(np.linalg.norm(pred_surface[:, None] - target_surface, axis=2), axis=1),
-                np.min(np.linalg.norm(target_surface[:, None] - pred_surface, axis=2), axis=1)
-            ])
+            distances = np.concatenate(
+                [
+                    np.min(np.linalg.norm(pred_surface[:, None] - target_surface, axis=2), axis=1),
+                    np.min(np.linalg.norm(target_surface[:, None] - pred_surface, axis=2), axis=1),
+                ]
+            )
 
             return np.percentile(distances, percentile)
 
@@ -218,8 +222,9 @@ class MedicalSegmentationMetrics:
         surface_points = np.column_stack(np.where(boundary))
         return surface_points
 
-    def average_surface_distance(self, pred: np.ndarray, target: np.ndarray,
-                                class_idx: int = None) -> Union[float, np.ndarray]:
+    def average_surface_distance(
+        self, pred: np.ndarray, target: np.ndarray, class_idx: int = None
+    ) -> Union[float, np.ndarray]:
         """
         Calculate Average Surface Distance (ASD).
 
@@ -233,15 +238,16 @@ class MedicalSegmentationMetrics:
         Returns:
             Average surface distance(s) in mm
         """
+
         def _asd_single(pred_mask: np.ndarray, target_mask: np.ndarray) -> float:
             if np.sum(pred_mask) == 0 or np.sum(target_mask) == 0:
-                return float('inf')
+                return float("inf")
 
             pred_surface = self._get_surface_points(pred_mask)
             target_surface = self._get_surface_points(target_mask)
 
             if len(pred_surface) == 0 or len(target_surface) == 0:
-                return float('inf')
+                return float("inf")
 
             # Calculate average surface distance
             distances1 = np.min(np.linalg.norm(pred_surface[:, None] - target_surface, axis=2), axis=1)
@@ -262,8 +268,9 @@ class MedicalSegmentationMetrics:
 
         return np.array(asd_scores)
 
-    def volumetric_similarity(self, pred: np.ndarray, target: np.ndarray,
-                             class_idx: int = None) -> Union[float, np.ndarray]:
+    def volumetric_similarity(
+        self, pred: np.ndarray, target: np.ndarray, class_idx: int = None
+    ) -> Union[float, np.ndarray]:
         """
         Calculate Volumetric Similarity (VS).
 
@@ -292,8 +299,9 @@ class MedicalSegmentationMetrics:
 
         return np.array(vs_scores)
 
-    def relative_absolute_volume_difference(self, pred: np.ndarray, target: np.ndarray,
-                                          class_idx: int = None) -> Union[float, np.ndarray]:
+    def relative_absolute_volume_difference(
+        self, pred: np.ndarray, target: np.ndarray, class_idx: int = None
+    ) -> Union[float, np.ndarray]:
         """
         Calculate Relative Absolute Volume Difference (RAVD).
 
@@ -312,7 +320,7 @@ class MedicalSegmentationMetrics:
             target_vol = np.sum(target == class_idx)
 
             if target_vol == 0:
-                return float('inf') if pred_vol > 0 else 0.0
+                return float("inf") if pred_vol > 0 else 0.0
 
             return abs(pred_vol - target_vol) / target_vol
 
@@ -322,7 +330,7 @@ class MedicalSegmentationMetrics:
 
         return np.array(ravd_scores)
 
-    def calculate_all_metrics(self, pred: np.ndarray, target: np.ndarray) -> Dict[str, Dict[str, float]]:
+    def calculate_all_metrics(self, pred: np.ndarray, target: np.ndarray) -> dict[str, dict[str, float]]:
         """
         Calculate comprehensive set of medical segmentation metrics.
 
@@ -338,27 +346,27 @@ class MedicalSegmentationMetrics:
         # Calculate metrics for each class
         for i, class_name in enumerate(self.class_names[1:], 1):  # Skip background
             metrics[class_name] = {
-                'dice': float(self.dice_coefficient(pred, target, i)),
-                'jaccard': float(self.jaccard_index(pred, target, i)),
-                'sensitivity': float(self.sensitivity_recall(pred, target, i)),
-                'specificity': float(self.specificity(pred, target, i)),
-                'hausdorff_95': float(self.hausdorff_distance(pred, target, i, 95)),
-                'avg_surface_distance': float(self.average_surface_distance(pred, target, i)),
-                'volumetric_similarity': float(self.volumetric_similarity(pred, target, i)),
-                'ravd': float(self.relative_absolute_volume_difference(pred, target, i))
+                "dice": float(self.dice_coefficient(pred, target, i)),
+                "jaccard": float(self.jaccard_index(pred, target, i)),
+                "sensitivity": float(self.sensitivity_recall(pred, target, i)),
+                "specificity": float(self.specificity(pred, target, i)),
+                "hausdorff_95": float(self.hausdorff_distance(pred, target, i, 95)),
+                "avg_surface_distance": float(self.average_surface_distance(pred, target, i)),
+                "volumetric_similarity": float(self.volumetric_similarity(pred, target, i)),
+                "ravd": float(self.relative_absolute_volume_difference(pred, target, i)),
             }
 
         # Calculate overall metrics
         dice_scores = self.dice_coefficient(pred, target)
-        metrics['Overall'] = {
-            'mean_dice': float(np.mean(dice_scores)),
-            'std_dice': float(np.std(dice_scores)),
-            'median_dice': float(np.median(dice_scores))
+        metrics["Overall"] = {
+            "mean_dice": float(np.mean(dice_scores)),
+            "std_dice": float(np.std(dice_scores)),
+            "median_dice": float(np.median(dice_scores)),
         }
 
         return metrics
 
-    def brats_challenge_metrics(self, pred: np.ndarray, target: np.ndarray) -> Dict[str, float]:
+    def brats_challenge_metrics(self, pred: np.ndarray, target: np.ndarray) -> dict[str, float]:
         """
         Calculate metrics used in BraTS Challenge for standardized comparison.
 
@@ -387,11 +395,7 @@ class MedicalSegmentationMetrics:
         # Calculate metrics for each region
         brats_metrics = {}
 
-        regions = {
-            'WT': (wt_pred, wt_target),
-            'TC': (tc_pred, tc_target),
-            'ET': (et_pred, et_target)
-        }
+        regions = {"WT": (wt_pred, wt_target), "TC": (tc_pred, tc_target), "ET": (et_pred, et_target)}
 
         for region_name, (pred_region, target_region) in regions.items():
             # Dice
@@ -416,27 +420,30 @@ class MedicalSegmentationMetrics:
                     target_surface = self._get_surface_points(target_region)
 
                     if len(pred_surface) > 0 and len(target_surface) > 0:
-                        distances = np.concatenate([
-                            np.min(np.linalg.norm(pred_surface[:, None] - target_surface, axis=2), axis=1),
-                            np.min(np.linalg.norm(target_surface[:, None] - pred_surface, axis=2), axis=1)
-                        ])
+                        distances = np.concatenate(
+                            [
+                                np.min(np.linalg.norm(pred_surface[:, None] - target_surface, axis=2), axis=1),
+                                np.min(np.linalg.norm(target_surface[:, None] - pred_surface, axis=2), axis=1),
+                            ]
+                        )
                         hd95 = np.percentile(distances, 95)
                     else:
-                        hd95 = float('inf')
+                        hd95 = float("inf")
                 else:
-                    hd95 = float('inf')
+                    hd95 = float("inf")
             except:
-                hd95 = float('inf')
+                hd95 = float("inf")
 
-            brats_metrics[f'{region_name}_Dice'] = dice
-            brats_metrics[f'{region_name}_Sensitivity'] = sensitivity
-            brats_metrics[f'{region_name}_Specificity'] = specificity
-            brats_metrics[f'{region_name}_Hausdorff95'] = hd95
+            brats_metrics[f"{region_name}_Dice"] = dice
+            brats_metrics[f"{region_name}_Sensitivity"] = sensitivity
+            brats_metrics[f"{region_name}_Specificity"] = specificity
+            brats_metrics[f"{region_name}_Hausdorff95"] = hd95
 
         return brats_metrics
 
-    def statistical_significance_test(self, results1: List[Dict], results2: List[Dict],
-                                    metric: str = 'dice') -> Dict[str, float]:
+    def statistical_significance_test(
+        self, results1: list[dict], results2: list[dict], metric: str = "dice"
+    ) -> dict[str, float]:
         """
         Perform statistical significance testing between two methods.
 
@@ -459,20 +466,20 @@ class MedicalSegmentationMetrics:
         t_stat, t_pvalue = ttest_rel(values1, values2)
 
         # Wilcoxon signed-rank test (non-parametric)
-        w_stat, w_pvalue = wilcoxon(values1, values2, alternative='two-sided')
+        w_stat, w_pvalue = wilcoxon(values1, values2, alternative="two-sided")
 
         return {
-            'ttest_statistic': t_stat,
-            'ttest_pvalue': t_pvalue,
-            'wilcoxon_statistic': w_stat,
-            'wilcoxon_pvalue': w_pvalue,
-            'significant_at_005': min(t_pvalue, w_pvalue) < 0.05,
-            'significant_at_001': min(t_pvalue, w_pvalue) < 0.01
+            "ttest_statistic": t_stat,
+            "ttest_pvalue": t_pvalue,
+            "wilcoxon_statistic": w_stat,
+            "wilcoxon_pvalue": w_pvalue,
+            "significant_at_005": min(t_pvalue, w_pvalue) < 0.05,
+            "significant_at_001": min(t_pvalue, w_pvalue) < 0.01,
         }
 
 
 def main():
-    """Demonstration of medical metrics calculation"""
+    """Demonstration of medical metrics calculation."""
     # Create sample data
     np.random.seed(42)
     pred = np.random.randint(0, 4, (64, 64, 64))
@@ -494,7 +501,7 @@ def main():
 
     # BraTS challenge metrics
     brats_metrics = metrics_calc.brats_challenge_metrics(pred, target)
-    print(f"\nBraTS Challenge Metrics:")
+    print("\nBraTS Challenge Metrics:")
     print("-" * 30)
     for metric, value in brats_metrics.items():
         print(f"{metric}: {value:.4f}")
