@@ -1,0 +1,32 @@
+{
+  "experiment_name": "cross_organ_validation",
+  "description": "\u8de8\u5668\u5b98\u6cdb\u5316\u9a8c\u8bc1\u5b9e\u9a8c",
+  "pretrain_dataset": "brats_2020",
+  "test_datasets": [
+    "msd_liver",
+    "msd_heart",
+    "msd_lung",
+    "kits"
+  ],
+  "fine_tune": true,
+  "metrics": [
+    "dice",
+    "hausdorff",
+    "sensitivity",
+    "specificity"
+  ],
+  "expected_results": {
+    "msd_liver": {
+      "dice": 0.75
+    },
+    "msd_heart": {
+      "dice": 0.7
+    },
+    "msd_lung": {
+      "dice": 0.65
+    },
+    "kits": {
+      "dice": 0.7
+    }
+  }
+}

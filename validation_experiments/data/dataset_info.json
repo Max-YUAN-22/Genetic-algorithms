@@ -1,0 +1,75 @@
+{
+  "brats_2018": {
+    "url": "https://www.med.upenn.edu/cbica/brats2018/data.html",
+    "description": "BRaTS 2018 - 285 training cases",
+    "modalities": [
+      "T1",
+      "T1ce",
+      "T2",
+      "FLAIR"
+    ],
+    "task": "brain_tumor_segmentation"
+  },
+  "brats_2019": {
+    "url": "https://www.med.upenn.edu/cbica/brats2019/data.html",
+    "description": "BRaTS 2019 - 335 training cases",
+    "modalities": [
+      "T1",
+      "T1ce",
+      "T2",
+      "FLAIR"
+    ],
+    "task": "brain_tumor_segmentation"
+  },
+  "brats_2021": {
+    "url": "https://www.synapse.org/#!Synapse:syn27046444/wiki/617126",
+    "description": "BRaTS 2021 - 1251 training cases",
+    "modalities": [
+      "T1",
+      "T1ce",
+      "T2",
+      "FLAIR"
+    ],
+    "task": "brain_tumor_segmentation"
+  },
+  "msd_liver": {
+    "url": "http://medicaldecathlon.com/",
+    "description": "MSD Liver - 131 CT cases",
+    "modalities": [
+      "CT"
+    ],
+    "task": "liver_segmentation"
+  },
+  "msd_heart": {
+    "url": "http://medicaldecathlon.com/",
+    "description": "MSD Heart - 20 MRI cases",
+    "modalities": [
+      "MRI"
+    ],
+    "task": "heart_segmentation"
+  },
+  "msd_lung": {
+    "url": "http://medicaldecathlon.com/",
+    "description": "MSD Lung - 63 CT cases",
+    "modalities": [
+      "CT"
+    ],
+    "task": "lung_segmentation"
+  },
+  "lits": {
+    "url": "https://competitions.codalab.org/competitions/17094",
+    "description": "LiTS - 201 liver CT cases",
+    "modalities": [
+      "CT"
+    ],
+    "task": "liver_tumor_segmentation"
+  },
+  "kits": {
+    "url": "https://kits19.grand-challenge.org/",
+    "description": "KiTS - 300 kidney CT cases",
+    "modalities": [
+      "CT"
+    ],
+    "task": "kidney_tumor_segmentation"
+  }
+}
