@@ -48,17 +48,13 @@
       "Edema_specificity": 0.9999999999991863,
       "Enhancing_dice": 0.40523702910522474,
       "Enhancing_sensitivity": 0.9997598462992321,
-      "Enhancing_specificity": 8.183306055639784e-05
+      "Enhancing_specificity": 8.183306055639784e-5
     }
   ],
   "training_summary": {
     "training_progression": {
-      "dice_scores": [
-        0.13459056160016852
-      ],
-      "dice_std": [
-        0.0006957264916311562
-      ],
+      "dice_scores": [0.13459056160016852],
+      "dice_std": [0.0006957264916311562],
       "final_performance": 0.13459056160016852,
       "improvement": 0.0,
       "stability": Infinity

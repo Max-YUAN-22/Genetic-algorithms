@@ -104,14 +104,11 @@
     "val_ratio": 0.15,
     "num_epochs": 40,
     "learning_rate": 0.0001,
-    "weight_decay": 1e-05,
+    "weight_decay": 1e-5,
     "early_stopping_patience": 20,
     "gradient_clip_value": 1.0,
     "num_classes": 4,
-    "input_size": [
-      256,
-      256
-    ],
+    "input_size": [256, 256],
     "use_2_5d": true,
     "stack_depth": 5,
     "validate_every": 5,
