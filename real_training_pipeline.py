@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Real Training Pipeline for SCI Q2+ Publication
+Real Training Pipeline for SCI Q2+ Publication.
 
 This is the REAL training pipeline for our enhanced multimodal brain tumor
 segmentation framework. NO MOCK DATA OR SIMULATIONS.
@@ -11,21 +11,23 @@ Target: Medical Image Analysis, IEEE TMI, Computer Methods in Biomedicine
 
 import argparse
 import json
-import time
 import logging
-import warnings
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-import numpy as np
-from dataclasses import dataclass
 import sys
+import time
+import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import numpy as np
 
 # Import PyTorch first
 try:
     import torch
     import torch.nn as nn
     import torch.optim as optim
-    from torch.utils.data import Dataset, DataLoader
+    from torch.utils.data import DataLoader, Dataset
+
     PYTORCH_AVAILABLE = True
 except ImportError as e:
     print(f"❌ PyTorch import error: {e}")
@@ -33,21 +35,22 @@ except ImportError as e:
 
 # Import real components
 try:
-    from real_brats_adapter import RealBraTSLoader, RealBraTSConfig
-    from multimodal_yolo_prototype import MultimodalYOLOSegmentation, MedicalSegmentationLoss
     from medical_metrics import MedicalSegmentationMetrics
+    from multimodal_yolo_prototype import MedicalSegmentationLoss, MultimodalYOLOSegmentation
+    from real_brats_adapter import RealBraTSConfig, RealBraTSLoader
+
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
     print(f"❌ Component import error: {e}")
     print("Please ensure all framework components are available")
     COMPONENTS_AVAILABLE = False
 
-warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 @dataclass
 class RealTrainingConfig:
-    """Configuration for REAL training pipeline - SCI publication quality"""
+    """Configuration for REAL training pipeline - SCI publication quality."""
 
     # Dataset configuration
     batch_size: int = 8
@@ -64,7 +67,7 @@ class RealTrainingConfig:
 
     # Model configuration
     num_classes: int = 4
-    input_size: Tuple[int, int] = (256, 256)
+    input_size: tuple[int, int] = (256, 256)
 
     # 2.5D configuration (project neighboring slices into a single 2D image)
     use_2_5d: bool = False
@@ -85,21 +88,22 @@ class RealTrainingConfig:
     calculate_brats_metrics: bool = True
 
     def __post_init__(self):
-        """Set device after imports are available"""
+        """Set device after imports are available."""
         if PYTORCH_AVAILABLE:
             if torch.cuda.is_available():
                 self.device = "cuda"
-            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                 self.device = "mps"  # Apple Silicon GPU
             else:
                 self.device = "cpu"
 
 
 class RealBraTSDataset(Dataset):
-    """Real PyTorch Dataset for BraTS - NO MOCK DATA"""
+    """Real PyTorch Dataset for BraTS - NO MOCK DATA."""
 
-    def __init__(self, case_ids: List[str], brats_loader: RealBraTSLoader,
-                 config: RealTrainingConfig, is_training: bool = True):
+    def __init__(
+        self, case_ids: list[str], brats_loader: RealBraTSLoader, config: RealTrainingConfig, is_training: bool = True
+    ):
         self.case_ids = case_ids
         self.brats_loader = brats_loader
         self.config = config
@@ -124,9 +128,9 @@ class RealBraTSDataset(Dataset):
             framework_data = self.brats_loader.prepare_for_framework(case_data)
 
             # Extract modalities and mask
-            ct_image = framework_data['ct'].astype(np.float32)
-            mri_image = framework_data['mri'].astype(np.float32)
-            mask = framework_data['mask'].astype(np.int64)
+            ct_image = framework_data["ct"].astype(np.float32)
+            mri_image = framework_data["mri"].astype(np.float32)
+            mask = framework_data["mask"].astype(np.int64)
             # BraTS label mapping: {0,1,2,4} -> {0,1,2,3}
             mask[mask == 4] = 3
 
@@ -137,21 +141,14 @@ class RealBraTSDataset(Dataset):
 
             # Apply data augmentation only during training
             if self.is_training:
-                ct_image, mri_image, mask = self._apply_medical_augmentation(
-                    ct_image, mri_image, mask
-                )
+                ct_image, mri_image, mask = self._apply_medical_augmentation(ct_image, mri_image, mask)
 
             # Convert to tensors (make contiguous copies to fix stride issues)
             ct_tensor = torch.from_numpy(ct_image.copy()).unsqueeze(0)  # [1, H, W]
             mri_tensor = torch.from_numpy(mri_image.copy()).unsqueeze(0)  # [1, H, W]
             mask_tensor = torch.from_numpy(mask.copy())  # [H, W]
 
-            return {
-                'ct': ct_tensor,
-                'mri': mri_tensor,
-                'mask': mask_tensor,
-                'case_id': case_id
-            }
+            return {"ct": ct_tensor, "mri": mri_tensor, "mask": mask_tensor, "case_id": case_id}
 
         except Exception as e:
             self.logger.error(f"Error loading REAL case {case_id}: {e}")
@@ -160,16 +157,12 @@ class RealBraTSDataset(Dataset):
             dummy_mri = torch.zeros(1, *self.config.input_size)
             dummy_mask = torch.zeros(*self.config.input_size, dtype=torch.long)
 
-            return {
-                'ct': dummy_ct,
-                'mri': dummy_mri,
-                'mask': dummy_mask,
-                'case_id': case_id
-            }
+            return {"ct": dummy_ct, "mri": dummy_mri, "mask": dummy_mask, "case_id": case_id}
 
-    def _apply_medical_augmentation(self, ct: np.ndarray, mri: np.ndarray,
-                                   mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Apply medically-appropriate data augmentation"""
+    def _apply_medical_augmentation(
+        self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Apply medically-appropriate data augmentation."""
         # Medical-grade augmentation (not excessive)
 
         # Random horizontal flip (brain symmetry)
@@ -195,11 +188,13 @@ class RealBraTSDataset(Dataset):
 
         return ct, mri, mask
 
-    def _rotate_medical_images(self, ct: np.ndarray, mri: np.ndarray,
-                              mask: np.ndarray, angle: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Rotate medical images with proper interpolation"""
+    def _rotate_medical_images(
+        self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray, angle: float
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Rotate medical images with proper interpolation."""
         try:
             from scipy.ndimage import rotate
+
             ct_rot = rotate(ct, angle, reshape=False, order=1)
             mri_rot = rotate(mri, angle, reshape=False, order=1)
             mask_rot = rotate(mask, angle, reshape=False, order=0)
@@ -208,7 +203,9 @@ class RealBraTSDataset(Dataset):
             return ct, mri, mask
 
     def _project_2_5d(self, vol: np.ndarray) -> np.ndarray:
-        """Project a 3D volume (D,H,W) into a 2D image (H,W) using weighted neighboring slices.
+        """
+        Project a 3D volume (D,H,W) into a 2D image (H,W) using weighted neighboring slices.
+
         Falls back to identity for 2D inputs.
         """
         if vol.ndim == 2:
@@ -237,7 +234,7 @@ class RealBraTSDataset(Dataset):
 
 
 class RealTrainingPipeline:
-    """REAL training pipeline for SCI Q2+ publication"""
+    """REAL training pipeline for SCI Q2+ publication."""
 
     def __init__(self, config: RealTrainingConfig, output_dir: str = "real_training_results"):
         if not PYTORCH_AVAILABLE or not COMPONENTS_AVAILABLE:
@@ -250,11 +247,8 @@ class RealTrainingPipeline:
         # Setup detailed logging for research
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(self.output_dir / 'real_training.log'),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[logging.FileHandler(self.output_dir / "real_training.log"), logging.StreamHandler()],
         )
         self.logger = logging.getLogger(__name__)
 
@@ -283,25 +277,19 @@ class RealTrainingPipeline:
         self.logger.info("🧠 REAL Training Pipeline initialized for SCI Q2+ publication")
         self.logger.info(f"📊 Real BraTS cases available: {len(self.brats_loader.case_list)}")
         self.logger.info(f"🔧 Device: {self.config.device}")
-        self.logger.info(f"🎯 Target: SCI Q2+ Medical Image Analysis journals")
+        self.logger.info("🎯 Target: SCI Q2+ Medical Image Analysis journals")
 
-    def prepare_real_datasets(self) -> Tuple[DataLoader, DataLoader, DataLoader]:
-        """Prepare REAL train, validation, and test datasets"""
+    def prepare_real_datasets(self) -> tuple[DataLoader, DataLoader, DataLoader]:
+        """Prepare REAL train, validation, and test datasets."""
         self.logger.info("📊 Preparing REAL BraTS datasets...")
 
         # Get dataset splits
         splits = self.brats_loader.get_dataset_splits(self.config.train_ratio)
 
         # Create REAL datasets
-        train_dataset = RealBraTSDataset(
-            splits['train'], self.brats_loader, self.config, is_training=True
-        )
-        val_dataset = RealBraTSDataset(
-            splits['val'], self.brats_loader, self.config, is_training=False
-        )
-        test_dataset = RealBraTSDataset(
-            splits['test'], self.brats_loader, self.config, is_training=False
-        )
+        train_dataset = RealBraTSDataset(splits["train"], self.brats_loader, self.config, is_training=True)
+        val_dataset = RealBraTSDataset(splits["val"], self.brats_loader, self.config, is_training=False)
+        test_dataset = RealBraTSDataset(splits["test"], self.brats_loader, self.config, is_training=False)
 
         # Create data loaders
         train_loader = DataLoader(
@@ -309,8 +297,8 @@ class RealTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=True,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False,
-            persistent_workers=True if self.config.num_workers > 0 else False
+            pin_memory=True if self.config.device == "cuda" else False,
+            persistent_workers=True if self.config.num_workers > 0 else False,
         )
 
         val_loader = DataLoader(
@@ -318,7 +306,7 @@ class RealTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False
+            pin_memory=True if self.config.device == "cuda" else False,
         )
 
         test_loader = DataLoader(
@@ -326,16 +314,17 @@ class RealTrainingPipeline:
             batch_size=self.config.batch_size,
             shuffle=False,
             num_workers=self.config.num_workers,
-            pin_memory=True if self.config.device == 'cuda' else False
+            pin_memory=True if self.config.device == "cuda" else False,
         )
 
-        self.logger.info(f"📈 REAL dataset sizes - Train: {len(train_dataset)}, "
-                        f"Val: {len(val_dataset)}, Test: {len(test_dataset)}")
+        self.logger.info(
+            f"📈 REAL dataset sizes - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}"
+        )
 
         return train_loader, val_loader, test_loader
 
     def initialize_real_model(self) -> None:
-        """Initialize REAL model for training"""
+        """Initialize REAL model for training."""
         self.logger.info("🧠 Initializing REAL multimodal model...")
 
         # Create model
@@ -347,18 +336,14 @@ class RealTrainingPipeline:
 
         # Initialize optimizer
         self.optimizer = optim.AdamW(
-            self.model.parameters(),
-            lr=self.config.learning_rate,
-            weight_decay=self.config.weight_decay
+            self.model.parameters(), lr=self.config.learning_rate, weight_decay=self.config.weight_decay
         )
 
         # Initialize scheduler
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, mode='max', factor=0.5, patience=8
-        )
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode="max", factor=0.5, patience=8)
 
         # Initialize mixed precision scaler (only for CUDA)
-        if self.config.mixed_precision and self.config.device == 'cuda':
+        if self.config.mixed_precision and self.config.device == "cuda":
             self.scaler = torch.cuda.amp.GradScaler()
         else:
             self.scaler = None
@@ -369,8 +354,8 @@ class RealTrainingPipeline:
 
         self.logger.info(f"📊 Model - Total params: {total_params:,}, Trainable: {trainable_params:,}")
 
-    def train_real_epoch(self, train_loader: DataLoader, epoch: int) -> Dict[str, float]:
-        """Train one epoch on REAL data"""
+    def train_real_epoch(self, train_loader: DataLoader, epoch: int) -> dict[str, float]:
+        """Train one epoch on REAL data."""
         self.model.train()
 
         total_loss = 0.0
@@ -379,9 +364,9 @@ class RealTrainingPipeline:
 
         for batch_idx, batch in enumerate(train_loader):
             # Move REAL data to device
-            ct = batch['ct'].to(self.config.device)
-            mri = batch['mri'].to(self.config.device)
-            mask = batch['mask'].to(self.config.device)
+            ct = batch["ct"].to(self.config.device)
+            mri = batch["mri"].to(self.config.device)
+            mask = batch["mask"].to(self.config.device)
 
             # Zero gradients
             self.optimizer.zero_grad()
@@ -391,38 +376,34 @@ class RealTrainingPipeline:
                 with torch.cuda.amp.autocast():
                     outputs = self.model(ct, mri)
                     loss_dict = self.loss_fn(outputs, mask)
-                    loss = loss_dict['total_loss']
+                    loss = loss_dict["total_loss"]
 
                 # Backward pass with scaling
                 self.scaler.scale(loss).backward()
 
                 if self.config.gradient_clip_value > 0:
                     self.scaler.unscale_(self.optimizer)
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(), self.config.gradient_clip_value
-                    )
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip_value)
 
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
             else:
                 outputs = self.model(ct, mri)
                 loss_dict = self.loss_fn(outputs, mask)
-                loss = loss_dict['total_loss']
+                loss = loss_dict["total_loss"]
 
                 loss.backward()
 
                 if self.config.gradient_clip_value > 0:
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(), self.config.gradient_clip_value
-                    )
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip_value)
 
                 self.optimizer.step()
 
             # Calculate metrics on REAL data
             total_loss += loss.item()
 
-            if 'segmentation' in outputs:
-                pred = torch.argmax(outputs['segmentation'], dim=1)
+            if "segmentation" in outputs:
+                pred = torch.argmax(outputs["segmentation"], dim=1)
                 dice = self._calculate_real_dice_score(pred, mask)
                 dice_scores.append(dice)
 
@@ -430,18 +411,12 @@ class RealTrainingPipeline:
 
             # Log progress
             if batch_idx % 20 == 0:
-                self.logger.info(
-                    f"Epoch {epoch+1}, Batch {batch_idx}/{len(train_loader)}, "
-                    f"Loss: {loss.item():.4f}"
-                )
+                self.logger.info(f"Epoch {epoch + 1}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.4f}")
 
-        return {
-            'loss': total_loss / num_batches,
-            'dice': np.mean(dice_scores) if dice_scores else 0.0
-        }
+        return {"loss": total_loss / num_batches, "dice": np.mean(dice_scores) if dice_scores else 0.0}
 
-    def validate_real_epoch(self, val_loader: DataLoader) -> Dict[str, float]:
-        """Validate on REAL data"""
+    def validate_real_epoch(self, val_loader: DataLoader) -> dict[str, float]:
+        """Validate on REAL data."""
         self.model.eval()
 
         total_loss = 0.0
@@ -451,32 +426,29 @@ class RealTrainingPipeline:
         with torch.no_grad():
             for batch in val_loader:
                 # Move REAL data to device
-                ct = batch['ct'].to(self.config.device)
-                mri = batch['mri'].to(self.config.device)
-                mask = batch['mask'].to(self.config.device)
+                ct = batch["ct"].to(self.config.device)
+                mri = batch["mri"].to(self.config.device)
+                mask = batch["mask"].to(self.config.device)
 
                 # Forward pass
                 outputs = self.model(ct, mri)
                 loss_dict = self.loss_fn(outputs, mask)
-                loss = loss_dict['total_loss']
+                loss = loss_dict["total_loss"]
 
                 total_loss += loss.item()
 
                 # Calculate metrics on REAL data
-                if 'segmentation' in outputs:
-                    pred = torch.argmax(outputs['segmentation'], dim=1)
+                if "segmentation" in outputs:
+                    pred = torch.argmax(outputs["segmentation"], dim=1)
                     dice = self._calculate_real_dice_score(pred, mask)
                     dice_scores.append(dice)
 
                 num_batches += 1
 
-        return {
-            'loss': total_loss / num_batches,
-            'dice': np.mean(dice_scores) if dice_scores else 0.0
-        }
+        return {"loss": total_loss / num_batches, "dice": np.mean(dice_scores) if dice_scores else 0.0}
 
     def _calculate_real_dice_score(self, pred: torch.Tensor, target: torch.Tensor) -> float:
-        """Calculate REAL Dice score for batch"""
+        """Calculate REAL Dice score for batch."""
         dice_scores = []
 
         pred_np = pred.cpu().numpy()
@@ -500,8 +472,8 @@ class RealTrainingPipeline:
 
         return np.mean(dice_scores) if dice_scores else 0.0
 
-    def run_real_training(self) -> Dict[str, Any]:
-        """Run complete REAL training pipeline"""
+    def run_real_training(self) -> dict[str, Any]:
+        """Run complete REAL training pipeline."""
         self.logger.info("🚀 Starting REAL training for SCI Q2+ publication...")
 
         start_time = time.time()
@@ -526,40 +498,42 @@ class RealTrainingPipeline:
                 val_metrics = self.validate_real_epoch(val_loader)
 
                 # Update scheduler
-                self.scheduler.step(val_metrics['dice'])
+                self.scheduler.step(val_metrics["dice"])
 
                 epoch_time = time.time() - epoch_start_time
 
                 # Log metrics
                 self.logger.info(
-                    f"Epoch {epoch+1}/{self.config.num_epochs} - "
+                    f"Epoch {epoch + 1}/{self.config.num_epochs} - "
                     f"Train Loss: {train_metrics['loss']:.4f}, Train Dice: {train_metrics['dice']:.4f}, "
                     f"Val Loss: {val_metrics['loss']:.4f}, Val Dice: {val_metrics['dice']:.4f}, "
                     f"Time: {epoch_time:.2f}s"
                 )
 
                 # Check for improvement
-                if val_metrics['dice'] > best_dice:
-                    best_dice = val_metrics['dice']
+                if val_metrics["dice"] > best_dice:
+                    best_dice = val_metrics["dice"]
                     epochs_without_improvement = 0
 
                     if self.config.save_best_model:
-                        self._save_real_model(epoch + 1, val_metrics['dice'], is_best=True)
+                        self._save_real_model(epoch + 1, val_metrics["dice"], is_best=True)
 
                     self.logger.info(f"🎯 NEW BEST DICE: {best_dice:.4f}")
                 else:
                     epochs_without_improvement += 1
 
                 # Save training history
-                self.training_history.append({
-                    'epoch': epoch + 1,
-                    'train_loss': train_metrics['loss'],
-                    'train_dice': train_metrics['dice'],
-                    'val_loss': val_metrics['loss'],
-                    'val_dice': val_metrics['dice'],
-                    'lr': self.optimizer.param_groups[0]['lr'],
-                    'epoch_time': epoch_time
-                })
+                self.training_history.append(
+                    {
+                        "epoch": epoch + 1,
+                        "train_loss": train_metrics["loss"],
+                        "train_dice": train_metrics["dice"],
+                        "val_loss": val_metrics["loss"],
+                        "val_dice": val_metrics["dice"],
+                        "lr": self.optimizer.param_groups[0]["lr"],
+                        "epoch_time": epoch_time,
+                    }
+                )
 
                 # Early stopping
                 if epochs_without_improvement >= self.config.early_stopping_patience:
@@ -571,16 +545,18 @@ class RealTrainingPipeline:
 
         # Detailed WT/TC/ET with postprocessing
         try:
-            from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
             import numpy as np
+
+            from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
+
             eval_cfg = EvaluationConfig(
                 save_predictions=True,
                 save_visualizations=True,
                 calculate_brats_metrics=True,
                 enable_postprocessing=True,
-                postprocess_params={'keep_largest_per_class': True, 'min_component_size': 80, 'closing_radius': 1}
+                postprocess_params={"keep_largest_per_class": True, "min_component_size": 80, "closing_radius": 1},
             )
-            evaluator = BrainTumorEvaluator(eval_cfg, self.output_dir / 'evaluation_real')
+            evaluator = BrainTumorEvaluator(eval_cfg, self.output_dir / "evaluation_real")
 
             preds = []
             gts = []
@@ -588,17 +564,17 @@ class RealTrainingPipeline:
             self.model.eval()
             with torch.no_grad():
                 for batch in test_loader:
-                    ct = batch['ct'].to(self.config.device)
-                    mri = batch['mri'].to(self.config.device)
-                    mask = batch['mask'].to(self.config.device)
+                    ct = batch["ct"].to(self.config.device)
+                    mri = batch["mri"].to(self.config.device)
+                    mask = batch["mask"].to(self.config.device)
                     outputs = self.model(ct, mri)
-                    if 'segmentation' in outputs:
-                        pred = torch.argmax(outputs['segmentation'], dim=1).cpu().numpy()
+                    if "segmentation" in outputs:
+                        pred = torch.argmax(outputs["segmentation"], dim=1).cpu().numpy()
                     else:
                         pred = torch.zeros_like(mask).cpu().numpy()
                     preds.append(pred)
                     gts.append(mask.cpu().numpy())
-                    case_ids.extend(batch['case_id'])
+                    case_ids.extend(batch["case_id"])
             preds_np = np.concatenate(preds, axis=0)
             gts_np = np.concatenate(gts, axis=0)
             detailed_stats = evaluator.evaluate_batch(preds_np, gts_np, case_ids)
@@ -609,20 +585,20 @@ class RealTrainingPipeline:
 
         # Save results
         results = {
-            'best_validation_dice': best_dice,
-            'final_test_dice': test_metrics['dice'],
-            'total_epochs': len(self.training_history),
-            'total_training_time': total_time,
-            'training_history': self.training_history,
-            'detailed_wt_tc_et': detailed_stats,
-            'config': self.config.__dict__
+            "best_validation_dice": best_dice,
+            "final_test_dice": test_metrics["dice"],
+            "total_epochs": len(self.training_history),
+            "total_training_time": total_time,
+            "training_history": self.training_history,
+            "detailed_wt_tc_et": detailed_stats,
+            "config": self.config.__dict__,
         }
 
-        results_path = self.output_dir / 'real_training_results.json'
-        with open(results_path, 'w') as f:
+        results_path = self.output_dir / "real_training_results.json"
+        with open(results_path, "w") as f:
             json.dump(results, f, indent=2, default=str)
 
-        self.logger.info(f"🎉 REAL training completed!")
+        self.logger.info("🎉 REAL training completed!")
         self.logger.info(f"📊 Best validation Dice: {best_dice:.4f}")
         self.logger.info(f"📊 Final test Dice: {test_metrics['dice']:.4f}")
         self.logger.info(f"⏱️  Total time: {total_time:.2f} seconds")
@@ -630,38 +606,38 @@ class RealTrainingPipeline:
         return results
 
     def _save_real_model(self, epoch: int, dice_score: float, is_best: bool = False) -> None:
-        """Save REAL model checkpoint"""
+        """Save REAL model checkpoint."""
         checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'scheduler_state_dict': self.scheduler.state_dict(),
-            'dice_score': dice_score,
-            'config': self.config.__dict__,
-            'training_history': self.training_history
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "dice_score": dice_score,
+            "config": self.config.__dict__,
+            "training_history": self.training_history,
         }
 
         if is_best:
-            checkpoint_path = self.output_dir / 'best_real_model.pth'
+            checkpoint_path = self.output_dir / "best_real_model.pth"
             self.logger.info(f"💾 Saving BEST model: {checkpoint_path}")
         else:
-            checkpoint_path = self.output_dir / f'checkpoint_epoch_{epoch}.pth'
+            checkpoint_path = self.output_dir / f"checkpoint_epoch_{epoch}.pth"
 
         torch.save(checkpoint, checkpoint_path)
 
 
 def main():
-    """Main entry point for REAL training"""
+    """Main entry point for REAL training."""
     parser = argparse.ArgumentParser(description="REAL BraTS Training for SCI Q2+ Publication")
 
-    parser.add_argument('--output_dir', type=str, default='real_training_results')
-    parser.add_argument('--batch_size', type=int, default=8)
-    parser.add_argument('--num_epochs', type=int, default=150)
-    parser.add_argument('--learning_rate', type=float, default=1e-4)
-    parser.add_argument('--use_2_5d', action='store_true', help='Enable 2.5D projection for 3D volumes')
-    parser.add_argument('--stack_depth', type=int, default=5, help='2.5D stack depth (odd number)')
-    parser.add_argument('--eval_only', action='store_true', help='Run evaluation only (no training)')
-    parser.add_argument('--checkpoint', type=str, default='', help='Path to checkpoint .pth (optional)')
+    parser.add_argument("--output_dir", type=str, default="real_training_results")
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--num_epochs", type=int, default=150)
+    parser.add_argument("--learning_rate", type=float, default=1e-4)
+    parser.add_argument("--use_2_5d", action="store_true", help="Enable 2.5D projection for 3D volumes")
+    parser.add_argument("--stack_depth", type=int, default=5, help="2.5D stack depth (odd number)")
+    parser.add_argument("--eval_only", action="store_true", help="Run evaluation only (no training)")
+    parser.add_argument("--checkpoint", type=str, default="", help="Path to checkpoint .pth (optional)")
 
     args = parser.parse_args()
 
@@ -676,7 +652,7 @@ def main():
         num_epochs=args.num_epochs,
         learning_rate=args.learning_rate,
         use_2_5d=args.use_2_5d,
-        stack_depth=args.stack_depth
+        stack_depth=args.stack_depth,
     )
 
     try:
@@ -688,7 +664,7 @@ def main():
 
             # Initialize and load checkpoint
             pipeline.initialize_real_model()
-            ckpt_path = args.checkpoint or str((Path(args.output_dir) / 'best_real_model.pth'))
+            ckpt_path = args.checkpoint or str(Path(args.output_dir) / "best_real_model.pth")
             if Path(ckpt_path).exists():
                 try:
                     state = torch.load(ckpt_path, map_location=config.device, weights_only=False)
@@ -699,24 +675,26 @@ def main():
                     print(f"⚠️  Fallback loading checkpoint due to: {e}")
                     state = torch.load(ckpt_path, map_location=config.device)
 
-                if isinstance(state, dict) and 'model_state_dict' in state:
-                    pipeline.model.load_state_dict(state['model_state_dict'], strict=False)
+                if isinstance(state, dict) and "model_state_dict" in state:
+                    pipeline.model.load_state_dict(state["model_state_dict"], strict=False)
                 else:
                     pipeline.model.load_state_dict(state, strict=False)
             else:
                 print(f"⚠️  Checkpoint not found at {ckpt_path}, evaluating current weights.")
 
             # Detailed WT/TC/ET with postprocessing
-            from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
             import numpy as np
+
+            from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
+
             eval_cfg = EvaluationConfig(
                 save_predictions=True,
                 save_visualizations=True,
                 calculate_brats_metrics=True,
                 enable_postprocessing=True,
-                postprocess_params={'keep_largest_per_class': True, 'min_component_size': 80, 'closing_radius': 1}
+                postprocess_params={"keep_largest_per_class": True, "min_component_size": 80, "closing_radius": 1},
             )
-            evaluator = BrainTumorEvaluator(eval_cfg, Path(args.output_dir) / 'evaluation_real')
+            evaluator = BrainTumorEvaluator(eval_cfg, Path(args.output_dir) / "evaluation_real")
 
             preds = []
             gts = []
@@ -724,17 +702,17 @@ def main():
             pipeline.model.eval()
             with torch.no_grad():
                 for batch in test_loader:
-                    ct = batch['ct'].to(config.device)
-                    mri = batch['mri'].to(config.device)
-                    mask = batch['mask'].to(config.device)
+                    ct = batch["ct"].to(config.device)
+                    mri = batch["mri"].to(config.device)
+                    mask = batch["mask"].to(config.device)
                     outputs = pipeline.model(ct, mri)
-                    if 'segmentation' in outputs:
-                        pred = torch.argmax(outputs['segmentation'], dim=1).cpu().numpy()
+                    if "segmentation" in outputs:
+                        pred = torch.argmax(outputs["segmentation"], dim=1).cpu().numpy()
                     else:
                         pred = torch.zeros_like(mask).cpu().numpy()
                     preds.append(pred)
                     gts.append(mask.cpu().numpy())
-                    case_ids.extend(batch['case_id'])
+                    case_ids.extend(batch["case_id"])
 
             preds_np = np.concatenate(preds, axis=0)
             gts_np = np.concatenate(gts, axis=0)
@@ -742,13 +720,13 @@ def main():
 
             # Save minimal results file
             results = {
-                'final_test_dice': float(detailed_stats.get('mean_dice', 0.0)),
-                'detailed_wt_tc_et': detailed_stats,
-                'config': config.__dict__
+                "final_test_dice": float(detailed_stats.get("mean_dice", 0.0)),
+                "detailed_wt_tc_et": detailed_stats,
+                "config": config.__dict__,
             }
 
-            out_path = Path(args.output_dir) / 'real_eval_only_results.json'
-            with open(out_path, 'w') as f:
+            out_path = Path(args.output_dir) / "real_eval_only_results.json"
+            with open(out_path, "w") as f:
                 json.dump(results, f, indent=2)
 
             print("\n✅ EVALUATION ONLY COMPLETED!")
@@ -756,7 +734,7 @@ def main():
         else:
             results = pipeline.run_real_training()
 
-            print(f"\n🎉 REAL TRAINING COMPLETED!")
+            print("\n🎉 REAL TRAINING COMPLETED!")
             print(f"📊 Best Dice Score: {results['best_validation_dice']:.4f}")
             print(f"📊 Test Dice Score: {results['final_test_dice']:.4f}")
             print(f"📄 Results saved to: {args.output_dir}")
