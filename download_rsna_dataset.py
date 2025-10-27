@@ -1,30 +1,29 @@
 #!/usr/bin/env python3
-"""
-RSNA Intracranial Aneurysm Detection 数据集下载和准备脚本
-"""
+"""RSNA Intracranial Aneurysm Detection 数据集下载和准备脚本."""
 
-import os
 import json
-import subprocess
+import os
 from pathlib import Path
 
+
 def setup_rsna_dataset():
-    """设置RSNA数据集环境"""
+    """设置RSNA数据集环境."""
     print("🚀 设置RSNA动脉瘤检测数据集...")
-    
+
     # 创建目录
     rsna_dir = Path("validation_experiments/data/rsna_aneurysm")
     rsna_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # 创建子目录
     subdirs = ["images", "labels", "metadata", "processed"]
     for subdir in subdirs:
         (rsna_dir / subdir).mkdir(exist_ok=True)
-    
+
     print(f"📁 创建目录: {rsna_dir}")
 
+
 def create_rsna_download_instructions():
-    """创建RSNA数据集下载说明"""
+    """创建RSNA数据集下载说明."""
     instructions = """
 # RSNA Intracranial Aneurysm Detection 数据集下载指南
 
@@ -119,14 +118,15 @@ rsna_aneurysm/
 - 数据描述: https://www.kaggle.com/competitions/rsna-intracranial-aneurysm-detection/data
 - 评估指标: https://www.kaggle.com/competitions/rsna-intracranial-aneurysm-detection/overview/evaluation
 """
-    
+
     with open("validation_experiments/data/rsna_aneurysm/README.md", "w") as f:
         f.write(instructions)
-    
+
     print("📖 下载说明已创建")
 
+
 def create_rsna_analysis_script():
-    """创建RSNA数据集分析脚本"""
+    """创建RSNA数据集分析脚本."""
     analysis_script = '''#!/usr/bin/env python3
 """
 RSNA数据集分析和预处理脚本
@@ -225,59 +225,61 @@ if __name__ == "__main__":
     df = analyze_rsna_dataset()
     print("\\n✅ RSNA数据集分析完成！")
 '''
-    
+
     with open("validation_experiments/scripts/analyze_rsna_dataset.py", "w") as f:
         f.write(analysis_script)
-    
+
     # 设置执行权限
     os.chmod("validation_experiments/scripts/analyze_rsna_dataset.py", 0o755)
-    
+
     print("📊 分析脚本已创建")
 
+
 def create_rsna_validation_summary():
-    """创建RSNA验证总结"""
+    """创建RSNA验证总结."""
     summary = {
         "dataset_name": "RSNA Intracranial Aneurysm Detection",
         "validation_type": "cross_domain_clinical_validation",
         "key_advantages": [
             "Real clinical data from 18 institutions",
             "Multiple imaging modalities (CTA, MRA, T1 post, T2)",
-            "Expert annotations by neuroradiologists", 
+            "Expert annotations by neuroradiologists",
             "Diverse scanners and imaging protocols",
             "Large-scale dataset with statistical power",
-            "High clinical relevance (aneurysm detection)"
+            "High clinical relevance (aneurysm detection)",
         ],
         "validation_goals": [
             "Verify cross-modal attention mechanism effectiveness",
             "Test cross-institution generalization capability",
             "Validate clinical applicability and robustness",
-            "Demonstrate method performance on real clinical data"
+            "Demonstrate method performance on real clinical data",
         ],
         "expected_benefits": [
             "Strong evidence for cross-modal fusion",
             "Proof of cross-institution generalization",
             "Clinical relevance validation",
-            "Robustness demonstration"
+            "Robustness demonstration",
         ],
         "target_metrics": {
             "final_score": "> 0.85",
-            "aneurysm_present_auc": "> 0.88", 
+            "aneurysm_present_auc": "> 0.88",
             "location_detection_auc": "> 0.82",
-            "cross_institution_std": "< 0.05"
-        }
+            "cross_institution_std": "< 0.05",
+        },
     }
-    
+
     with open("validation_experiments/data/rsna_aneurysm/validation_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    
+
     print("📋 验证总结已创建")
+
 
 if __name__ == "__main__":
     setup_rsna_dataset()
     create_rsna_download_instructions()
     create_rsna_analysis_script()
     create_rsna_validation_summary()
-    
+
     print("\\n🎉 RSNA数据集环境设置完成！")
     print("📁 数据目录: validation_experiments/data/rsna_aneurysm/")
     print("📖 请查看 README.md 了解下载步骤")

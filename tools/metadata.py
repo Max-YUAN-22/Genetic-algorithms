@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import json
-import os
 import platform
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -12,25 +12,21 @@ class RunMetadata:
     seed: int
     mode: str
     output_dir: str
-    git_commit: Optional[str]
+    git_commit: str | None
     python_version: str
     platform: str
-    cuda: Optional[str]
-    torch: Optional[str]
+    cuda: str | None
+    torch: str | None
 
 
-def _get_git_commit() -> Optional[str]:
+def _get_git_commit() -> str | None:
     try:
-        return (
-            subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
-            .decode("utf-8")
-            .strip()
-        )
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
     except Exception:
         return None
 
 
-def _get_torch_env() -> Dict[str, Optional[str]]:
+def _get_torch_env() -> dict[str, str | None]:
     try:
         import torch  # type: ignore
 
@@ -56,5 +52,3 @@ def write_metadata(output_dir: Path, seed: int, mode: str) -> Path:
     path = output_dir / "metadata.json"
     path.write_text(json.dumps(asdict(md), indent=2))
     return path
-
-
