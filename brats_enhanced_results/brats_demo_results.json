@@ -5,24 +5,10 @@
     "data_source": "real",
     "sample_case": {
       "case_id": "BraTS2021_00000",
-      "ct_shape": [
-        256,
-        256
-      ],
-      "mri_shape": [
-        256,
-        256
-      ],
-      "mask_shape": [
-        256,
-        256
-      ],
-      "unique_labels": [
-        0,
-        1,
-        2,
-        3
-      ]
+      "ct_shape": [256, 256],
+      "mri_shape": [256, 256],
+      "mask_shape": [256, 256],
+      "unique_labels": [0, 1, 2, 3]
     },
     "splits": {
       "train": 875,
@@ -35,28 +21,12 @@
     "model_created": true,
     "pytorch_available": true,
     "input_shapes": {
-      "ct": [
-        256,
-        256
-      ],
-      "mri": [
-        256,
-        256
-      ]
+      "ct": [256, 256],
+      "mri": [256, 256]
     },
     "output_shapes": {
-      "segmentation": [
-        1,
-        4,
-        128,
-        128
-      ],
-      "uncertainty": [
-        1,
-        4,
-        128,
-        128
-      ]
+      "segmentation": [1, 4, 128, 128],
+      "uncertainty": [1, 4, 128, 128]
     },
     "brats_case_processed": "BraTS2021_00000"
   },
@@ -79,9 +49,7 @@
       "elastic_alpha": 2919.7349295227727,
       "noise_intensity": 0.05670927306081966,
       "class_weights": [
-        0.10582623112230277,
-        1.140465900498293,
-        1.136951304906808,
+        0.10582623112230277, 1.140465900498293, 1.136951304906808,
         2.068420147296997
       ],
       "bias_field_correction": true,

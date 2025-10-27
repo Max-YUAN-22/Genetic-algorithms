@@ -1,117 +1,114 @@
 #!/usr/bin/env python3
-"""
-快速验证实验设置脚本
-用于准备跨数据集验证实验
-"""
+"""快速验证实验设置脚本 用于准备跨数据集验证实验."""
 
-import os
-import requests
-import zipfile
 import json
-from pathlib import Path
+import os
+
 
 def setup_validation_experiments():
-    """设置验证实验环境"""
+    """设置验证实验环境."""
     print("🚀 设置跨数据集验证实验...")
-    
+
     # 创建实验目录结构
     create_experiment_structure()
-    
+
     # 下载数据集信息
     download_dataset_info()
-    
+
     # 创建实验配置
     create_experiment_configs()
-    
+
     # 生成实验脚本
     generate_experiment_scripts()
-    
+
     print("✅ 验证实验环境设置完成！")
 
+
 def create_experiment_structure():
-    """创建实验目录结构"""
+    """创建实验目录结构."""
     directories = [
         "validation_experiments",
         "validation_experiments/data",
         "validation_experiments/data/brats_2018",
-        "validation_experiments/data/brats_2019", 
+        "validation_experiments/data/brats_2019",
         "validation_experiments/data/brats_2021",
         "validation_experiments/data/msd",
-        "validation_experiments/data/lits",
+        "validation_experiments/data/list",
         "validation_experiments/data/kits",
         "validation_experiments/results",
         "validation_experiments/results/cross_year",
         "validation_experiments/results/cross_organ",
         "validation_experiments/results/cross_modality",
         "validation_experiments/scripts",
-        "validation_experiments/configs"
+        "validation_experiments/configs",
     ]
-    
+
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
         print(f"📁 创建目录: {directory}")
 
+
 def download_dataset_info():
-    """下载数据集信息"""
+    """下载数据集信息."""
     dataset_info = {
         "brats_2018": {
             "url": "https://www.med.upenn.edu/cbica/brats2018/data.html",
             "description": "BRaTS 2018 - 285 training cases",
             "modalities": ["T1", "T1ce", "T2", "FLAIR"],
-            "task": "brain_tumor_segmentation"
+            "task": "brain_tumor_segmentation",
         },
         "brats_2019": {
-            "url": "https://www.med.upenn.edu/cbica/brats2019/data.html", 
+            "url": "https://www.med.upenn.edu/cbica/brats2019/data.html",
             "description": "BRaTS 2019 - 335 training cases",
             "modalities": ["T1", "T1ce", "T2", "FLAIR"],
-            "task": "brain_tumor_segmentation"
+            "task": "brain_tumor_segmentation",
         },
         "brats_2021": {
             "url": "https://www.synapse.org/#!Synapse:syn27046444/wiki/617126",
             "description": "BRaTS 2021 - 1251 training cases",
             "modalities": ["T1", "T1ce", "T2", "FLAIR"],
-            "task": "brain_tumor_segmentation"
+            "task": "brain_tumor_segmentation",
         },
         "msd_liver": {
             "url": "http://medicaldecathlon.com/",
             "description": "MSD Liver - 131 CT cases",
             "modalities": ["CT"],
-            "task": "liver_segmentation"
+            "task": "liver_segmentation",
         },
         "msd_heart": {
             "url": "http://medicaldecathlon.com/",
-            "description": "MSD Heart - 20 MRI cases", 
+            "description": "MSD Heart - 20 MRI cases",
             "modalities": ["MRI"],
-            "task": "heart_segmentation"
+            "task": "heart_segmentation",
         },
         "msd_lung": {
             "url": "http://medicaldecathlon.com/",
             "description": "MSD Lung - 63 CT cases",
             "modalities": ["CT"],
-            "task": "lung_segmentation"
+            "task": "lung_segmentation",
         },
-        "lits": {
+        "list": {
             "url": "https://competitions.codalab.org/competitions/17094",
-            "description": "LiTS - 201 liver CT cases",
+            "description": "list - 201 liver CT cases",
             "modalities": ["CT"],
-            "task": "liver_tumor_segmentation"
+            "task": "liver_tumor_segmentation",
         },
         "kits": {
             "url": "https://kits19.grand-challenge.org/",
             "description": "KiTS - 300 kidney CT cases",
             "modalities": ["CT"],
-            "task": "kidney_tumor_segmentation"
-        }
+            "task": "kidney_tumor_segmentation",
+        },
     }
-    
+
     with open("validation_experiments/data/dataset_info.json", "w") as f:
         json.dump(dataset_info, f, indent=2)
-    
+
     print("📋 数据集信息已保存")
 
+
 def create_experiment_configs():
-    """创建实验配置文件"""
-    
+    """创建实验配置文件."""
     # 跨年份验证配置
     cross_year_config = {
         "experiment_name": "cross_year_validation",
@@ -122,13 +119,13 @@ def create_experiment_configs():
         "expected_results": {
             "brats_2018": {"dice_wt": 0.80, "dice_tc": 0.75, "dice_et": 0.65},
             "brats_2019": {"dice_wt": 0.82, "dice_tc": 0.77, "dice_et": 0.67},
-            "brats_2021": {"dice_wt": 0.85, "dice_tc": 0.80, "dice_et": 0.70}
-        }
+            "brats_2021": {"dice_wt": 0.85, "dice_tc": 0.80, "dice_et": 0.70},
+        },
     }
-    
+
     # 跨器官验证配置
     cross_organ_config = {
-        "experiment_name": "cross_organ_validation", 
+        "experiment_name": "cross_organ_validation",
         "description": "跨器官泛化验证实验",
         "pretrain_dataset": "brats_2020",
         "test_datasets": ["msd_liver", "msd_heart", "msd_lung", "kits"],
@@ -138,21 +135,21 @@ def create_experiment_configs():
             "msd_liver": {"dice": 0.75},
             "msd_heart": {"dice": 0.70},
             "msd_lung": {"dice": 0.65},
-            "kits": {"dice": 0.70}
-        }
+            "kits": {"dice": 0.70},
+        },
     }
-    
+
     # 跨模态验证配置
     cross_modality_config = {
         "experiment_name": "cross_modality_validation",
-        "description": "跨模态组合验证实验", 
+        "description": "跨模态组合验证实验",
         "dataset": "brats_2020",
         "modality_combinations": [
             ["T1", "T1ce"],
             ["T1", "T2"],
             ["T1", "FLAIR"],
             ["T1ce", "T2"],
-            ["T1", "T1ce", "T2", "FLAIR"]
+            ["T1", "T1ce", "T2", "FLAIR"],
         ],
         "metrics": ["dice", "hausdorff", "sensitivity", "specificity"],
         "expected_results": {
@@ -160,25 +157,25 @@ def create_experiment_configs():
             "T1_T2": {"dice_wt": 0.78, "dice_tc": 0.73, "dice_et": 0.63},
             "T1_FLAIR": {"dice_wt": 0.82, "dice_tc": 0.77, "dice_et": 0.67},
             "T1ce_T2": {"dice_wt": 0.79, "dice_tc": 0.74, "dice_et": 0.64},
-            "All_4": {"dice_wt": 0.85, "dice_tc": 0.80, "dice_et": 0.70}
-        }
+            "All_4": {"dice_wt": 0.85, "dice_tc": 0.80, "dice_et": 0.70},
+        },
     }
-    
+
     configs = {
         "cross_year": cross_year_config,
         "cross_organ": cross_organ_config,
-        "cross_modality": cross_modality_config
+        "cross_modality": cross_modality_config,
     }
-    
+
     for name, config in configs.items():
         with open(f"validation_experiments/configs/{name}_config.json", "w") as f:
             json.dump(config, f, indent=2)
-    
+
     print("⚙️ 实验配置文件已创建")
 
+
 def generate_experiment_scripts():
-    """生成实验脚本"""
-    
+    """生成实验脚本."""
     # 跨年份验证脚本
     cross_year_script = '''#!/usr/bin/env python3
 """
@@ -236,7 +233,7 @@ def run_cross_year_validation():
 if __name__ == "__main__":
     results = run_cross_year_validation()
 '''
-    
+
     # 跨器官验证脚本
     cross_organ_script = '''#!/usr/bin/env python3
 """
@@ -304,7 +301,7 @@ def fine_tune_model(model, dataset, epochs=50):
 if __name__ == "__main__":
     results = run_cross_organ_validation()
 '''
-    
+
     # 跨模态验证脚本
     cross_modality_script = '''#!/usr/bin/env python3
 """
@@ -375,25 +372,26 @@ def train_model(model, dataset, epochs=100):
 if __name__ == "__main__":
     results = run_cross_modality_validation()
 '''
-    
+
     scripts = {
         "cross_year_validation.py": cross_year_script,
         "cross_organ_validation.py": cross_organ_script,
-        "cross_modality_validation.py": cross_modality_script
+        "cross_modality_validation.py": cross_modality_script,
     }
-    
+
     for filename, script in scripts.items():
         with open(f"validation_experiments/scripts/{filename}", "w") as f:
             f.write(script)
-        
+
         # 设置执行权限
         os.chmod(f"validation_experiments/scripts/{filename}", 0o755)
-    
+
     print("📝 实验脚本已生成")
 
+
 def create_readme():
-    """创建验证实验说明文档"""
-    readme_content = '''# 跨数据集验证实验
+    """创建验证实验说明文档."""
+    readme_content = """# 跨数据集验证实验
 
 ## 🎯 实验目标
 
@@ -497,12 +495,13 @@ python analyze_results.py
 - 配置文件: `configs/`
 - 实验脚本: `scripts/`
 - 结果分析: `results/`
-'''
-    
+"""
+
     with open("validation_experiments/README.md", "w") as f:
         f.write(readme_content)
-    
+
     print("📖 说明文档已创建")
+
 
 if __name__ == "__main__":
     setup_validation_experiments()

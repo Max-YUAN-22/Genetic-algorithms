@@ -2,11 +2,7 @@
   "validation_summary": {
     "date": "2025-10-06 16:28:05",
     "num_test_cases": 0,
-    "models_evaluated": [
-      "ours_multimodal_ga",
-      "nnu_net",
-      "attention_unet"
-    ],
+    "models_evaluated": ["ours_multimodal_ga", "nnu_net", "attention_unet"],
     "evaluation_metrics": [
       "dice_coefficient",
       "hausdorff_95",
@@ -182,21 +178,9 @@
   },
   "statistical_analysis": {},
   "rankings": {
-    "dice_coefficient": [
-      "attention_unet",
-      "nnu_net",
-      "ours_multimodal_ga"
-    ],
-    "inference_speed": [
-      "ours_multimodal_ga",
-      "nnu_net",
-      "attention_unet"
-    ],
-    "parameter_efficiency": [
-      "attention_unet",
-      "nnu_net",
-      "ours_multimodal_ga"
-    ]
+    "dice_coefficient": ["attention_unet", "nnu_net", "ours_multimodal_ga"],
+    "inference_speed": ["ours_multimodal_ga", "nnu_net", "attention_unet"],
+    "parameter_efficiency": ["attention_unet", "nnu_net", "ours_multimodal_ga"]
   },
   "clinical_insights": {
     "best_overall_method": "attention_unet",
@@ -205,11 +189,7 @@
       "excellent": [],
       "good": [],
       "acceptable": [],
-      "inadequate": [
-        "ours_multimodal_ga",
-        "nnu_net",
-        "attention_unet"
-      ]
+      "inadequate": ["ours_multimodal_ga", "nnu_net", "attention_unet"]
     },
     "trade_offs": {
       "ours_multimodal_ga": {

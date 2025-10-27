@@ -2,17 +2,8 @@
   "experiment_name": "cross_year_validation",
   "description": "BRaTS\u8de8\u5e74\u4efd\u9a8c\u8bc1\u5b9e\u9a8c",
   "train_dataset": "brats_2020",
-  "test_datasets": [
-    "brats_2018",
-    "brats_2019",
-    "brats_2021"
-  ],
-  "metrics": [
-    "dice",
-    "hausdorff",
-    "sensitivity",
-    "specificity"
-  ],
+  "test_datasets": ["brats_2018", "brats_2019", "brats_2021"],
+  "metrics": ["dice", "hausdorff", "sensitivity", "specificity"],
   "expected_results": {
     "brats_2018": {
       "dice_wt": 0.8,

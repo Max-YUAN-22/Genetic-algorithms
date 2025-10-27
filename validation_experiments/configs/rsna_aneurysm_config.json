@@ -14,7 +14,11 @@
   "adaptation_strategy": "fine_tuning",
   "evaluation_metrics": {
     "primary": "weighted_auc",
-    "secondary": ["aneurysm_present_auc", "location_aucs", "cross_institution_std"]
+    "secondary": [
+      "aneurysm_present_auc",
+      "location_aucs",
+      "cross_institution_std"
+    ]
   },
   "expected_results": {
     "final_score": 0.85,

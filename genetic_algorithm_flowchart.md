@@ -65,20 +65,18 @@ graph TD
 
 ```python
 def fitness_function(individual):
-    """
-    多目标适应度函数
-    """
+    """多目标适应度函数."""
     # 主要目标：分割精度
     dice_score = evaluate_dice(individual)
-    
+
     # 次要目标：计算效率
     efficiency = 1.0 / (flops + latency)
-    
+
     # 第三目标：不确定性
     uncertainty = evaluate_uncertainty(individual)
-    
+
     # 加权组合
     fitness = 0.6 * dice_score + 0.3 * efficiency + 0.1 * uncertainty
-    
+
     return fitness
 ```

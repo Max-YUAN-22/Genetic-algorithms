@@ -1,14 +1,8 @@
 {
   "preprocessing": {
     "status": "completed",
-    "original_shape": [
-      256,
-      256
-    ],
-    "processed_shape": [
-      256,
-      256
-    ],
+    "original_shape": [256, 256],
+    "processed_shape": [256, 256],
     "normalization_applied": true,
     "quality_score": 0.85
   },
@@ -31,9 +25,7 @@
       "elastic_alpha": 2954.509532147982,
       "noise_intensity": 0.12501278969842777,
       "class_weights": [
-        0.14116406217616362,
-        1.13680033067074,
-        1.4954091230803406,
+        0.14116406217616362, 1.13680033067074, 1.4954091230803406,
         1.689208960787346
       ],
       "bias_field_correction": false,

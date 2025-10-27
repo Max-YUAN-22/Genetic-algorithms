@@ -36,6 +36,7 @@ This repository contains a state-of-the-art multimodal deep learning framework f
 ```python
 # Quick test
 from multimodal_yolo_prototype import create_multimodal_yolo_model
+
 model = create_multimodal_yolo_model(num_classes=4)
 ```
 
@@ -282,15 +283,16 @@ where:
 ### 1. Basic Multimodal Prediction
 
 ```python
-from multimodal_yolo_prototype import MultimodalYOLOSegmentation
 import numpy as np
+
+from multimodal_yolo_prototype import MultimodalYOLOSegmentation
 
 # Create model
 model = MultimodalYOLOSegmentation(num_classes=4)
 
 # Load CT and MRI images
-ct_image = np.load('ct_scan.npy')      # Shape: [H, W]
-mri_image = np.load('mri_scan.npy')    # Shape: [H, W]
+ct_image = np.load("ct_scan.npy")  # Shape: [H, W]
+mri_image = np.load("mri_scan.npy")  # Shape: [H, W]
 
 # Convert to tensors
 ct_tensor = torch.from_numpy(ct_image).float().unsqueeze(0).unsqueeze(0)
@@ -300,8 +302,8 @@ mri_tensor = torch.from_numpy(mri_image).float().unsqueeze(0).unsqueeze(0)
 with torch.no_grad():
     outputs = model(ct_tensor, mri_tensor)
 
-segmentation = outputs['segmentation']
-uncertainty = outputs['uncertainty']
+segmentation = outputs["segmentation"]
+uncertainty = outputs["uncertainty"]
 ```
 
 ### 2. Genetic Algorithm Optimization
@@ -311,11 +313,7 @@ from enhanced_genetic_tuner import EnhancedGeneticTuner, MultiObjectiveConfig
 
 # Configure optimization
 config = MultiObjectiveConfig(
-    population_size=50,
-    generations=100,
-    accuracy_weight=0.5,
-    efficiency_weight=0.3,
-    uncertainty_weight=0.2
+    population_size=50, generations=100, accuracy_weight=0.5, efficiency_weight=0.3, uncertainty_weight=0.2
 )
 
 # Run optimization
@@ -332,11 +330,7 @@ print(f"Fitness: {best_individual.fitness:.4f}")
 from medical_evaluation_system import BrainTumorEvaluator, EvaluationConfig
 
 # Configure evaluation
-config = EvaluationConfig(
-    save_predictions=True,
-    save_visualizations=True,
-    calculate_brats_metrics=True
-)
+config = EvaluationConfig(save_predictions=True, save_visualizations=True, calculate_brats_metrics=True)
 
 # Create evaluator
 evaluator = BrainTumorEvaluator(config)
@@ -356,8 +350,7 @@ from sota_validation_pipeline import SOTAValidationPipeline, ValidationConfig
 
 # Configure comparison
 config = ValidationConfig(
-    models_to_compare=['ours_multimodal_ga', 'nnu_net', 'attention_unet'],
-    generate_visualizations=True
+    models_to_compare=["ours_multimodal_ga", "nnu_net", "attention_unet"], generate_visualizations=True
 )
 
 # Run validation
