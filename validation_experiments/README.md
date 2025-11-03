@@ -29,7 +29,7 @@
 wget [BRaTS2018下载链接] -O data/brats_2018.zip
 unzip data/brats_2018.zip -d data/brats_2018/
 
-# BRaTS 2019  
+# BRaTS 2019
 wget [BRaTS2019下载链接] -O data/brats_2019.zip
 unzip data/brats_2019.zip -d data/brats_2019/
 

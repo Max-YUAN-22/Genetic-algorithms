@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced Multimodal Deep Learning Framework for Brain Tumor Segmentation
-Using CT and MRI Images with Improved Genetic Algorithm Optimization
+Enhanced Multimodal Deep Learning Framework for Brain Tumor Segmentation Using CT and MRI Images with Improved Genetic
+Algorithm Optimization.
 
 This framework implements state-of-the-art multimodal deep learning for brain tumor
 segmentation with advanced genetic algorithm optimization targeting SCI Q2+ publication.
@@ -17,21 +17,21 @@ Authors: [Your Name]
 Affiliation: [Your Institution]
 """
 
+from __future__ import annotations
+
+import random
+from dataclasses import dataclass
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from typing import Tuple, List, Dict, Optional
-import random
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from sklearn.metrics import jaccard_score
-import logging
 
 
 @dataclass
 class GAConfig:
-    """Configuration for Genetic Algorithm optimization"""
+    """Configuration for Genetic Algorithm optimization."""
+
     population_size: int = 50
     generations: int = 100
     mutation_rate: float = 0.1
@@ -42,7 +42,7 @@ class GAConfig:
 
 
 class CrossModalAttention(nn.Module):
-    """Cross-Modal Attention mechanism for CT-MRI feature fusion"""
+    """Cross-Modal Attention mechanism for CT-MRI feature fusion."""
 
     def __init__(self, ct_channels: int, mri_channels: int, out_channels: int):
         super().__init__()
@@ -91,14 +91,14 @@ class CrossModalAttention(nn.Module):
 
 
 class UncertaintyAwareConv3d(nn.Module):
-    """3D Convolution with uncertainty quantification"""
+    """3D Convolution with uncertainty quantification."""
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int = 3):
         super().__init__()
-        self.mean_conv = nn.Conv3d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
-        self.var_conv = nn.Conv3d(in_channels, out_channels, kernel_size, padding=kernel_size//2)
+        self.mean_conv = nn.Conv3d(in_channels, out_channels, kernel_size, padding=kernel_size // 2)
+        self.var_conv = nn.Conv3d(in_channels, out_channels, kernel_size, padding=kernel_size // 2)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         mean = self.mean_conv(x)
         log_var = self.var_conv(x)
 
@@ -114,47 +114,61 @@ class UncertaintyAwareConv3d(nn.Module):
 
 
 class MultimodalUNet3D(nn.Module):
-    """3D U-Net with cross-modal attention for brain tumor segmentation"""
+    """3D U-Net with cross-modal attention for brain tumor segmentation."""
 
-    def __init__(self, ct_channels: int = 1, mri_channels: int = 1, num_classes: int = 4,
-                 base_channels: int = 32, uncertainty: bool = True):
+    def __init__(
+        self,
+        ct_channels: int = 1,
+        mri_channels: int = 1,
+        num_classes: int = 4,
+        base_channels: int = 32,
+        uncertainty: bool = True,
+    ):
         super().__init__()
         self.uncertainty = uncertainty
 
         # Encoder for CT
-        self.ct_encoder = nn.ModuleList([
-            self._make_encoder_block(ct_channels, base_channels),
-            self._make_encoder_block(base_channels, base_channels * 2),
-            self._make_encoder_block(base_channels * 2, base_channels * 4),
-            self._make_encoder_block(base_channels * 4, base_channels * 8),
-        ])
+        self.ct_encoder = nn.ModuleList(
+            [
+                self._make_encoder_block(ct_channels, base_channels),
+                self._make_encoder_block(base_channels, base_channels * 2),
+                self._make_encoder_block(base_channels * 2, base_channels * 4),
+                self._make_encoder_block(base_channels * 4, base_channels * 8),
+            ]
+        )
 
         # Encoder for MRI
-        self.mri_encoder = nn.ModuleList([
-            self._make_encoder_block(mri_channels, base_channels),
-            self._make_encoder_block(base_channels, base_channels * 2),
-            self._make_encoder_block(base_channels * 2, base_channels * 4),
-            self._make_encoder_block(base_channels * 4, base_channels * 8),
-        ])
+        self.mri_encoder = nn.ModuleList(
+            [
+                self._make_encoder_block(mri_channels, base_channels),
+                self._make_encoder_block(base_channels, base_channels * 2),
+                self._make_encoder_block(base_channels * 2, base_channels * 4),
+                self._make_encoder_block(base_channels * 4, base_channels * 8),
+            ]
+        )
 
         # Cross-modal attention layers
-        self.attention_layers = nn.ModuleList([
-            CrossModalAttention(base_channels, base_channels, base_channels),
-            CrossModalAttention(base_channels * 2, base_channels * 2, base_channels * 2),
-            CrossModalAttention(base_channels * 4, base_channels * 4, base_channels * 4),
-            CrossModalAttention(base_channels * 8, base_channels * 8, base_channels * 8),
-        ])
+        self.attention_layers = nn.ModuleList(
+            [
+                CrossModalAttention(base_channels, base_channels, base_channels),
+                CrossModalAttention(base_channels * 2, base_channels * 2, base_channels * 2),
+                CrossModalAttention(base_channels * 4, base_channels * 4, base_channels * 4),
+                CrossModalAttention(base_channels * 8, base_channels * 8, base_channels * 8),
+            ]
+        )
 
         # Bottleneck
         self.bottleneck = self._make_encoder_block(base_channels * 8, base_channels * 16)
 
         # Decoder
-        self.decoder = nn.ModuleList([
-            self._make_decoder_block(base_channels * 16, base_channels * 8),
-            self._make_decoder_block(base_channels * 16, base_channels * 4),
-            self._make_decoder_block(base_channels * 8, base_channels * 2),
-            self._make_decoder_block(base_channels * 4, base_channels),
-        ])
+        self.decoder = nn.ModuleList(
+            [
+                self._make_decoder_block(base_channels * 16, base_channels * 8),
+                self._make_decoder_block(base_channels * 16, base_channels * 4),
+                self._make_decoder_block(base_channels * 8, base_channels * 2),
+                self._make_decoder_block(base_channels * 4, base_channels),
+            ]
+        )
 
         # Final classification layer
         if uncertainty:
@@ -163,7 +177,7 @@ class MultimodalUNet3D(nn.Module):
             self.final_conv = nn.Conv3d(base_channels * 2, num_classes, 1)
 
         self.pool = nn.MaxPool3d(2)
-        self.upsample = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=True)
+        self.upsample = nn.Upsample(scale_factor=2, mode="trilinear", align_corners=True)
 
     def _make_encoder_block(self, in_channels: int, out_channels: int) -> nn.Module:
         return nn.Sequential(
@@ -172,7 +186,7 @@ class MultimodalUNet3D(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, 3, padding=1),
             nn.BatchNorm3d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
     def _make_decoder_block(self, in_channels: int, out_channels: int) -> nn.Module:
@@ -182,10 +196,10 @@ class MultimodalUNet3D(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, 3, padding=1),
             nn.BatchNorm3d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
-    def forward(self, ct: torch.Tensor, mri: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, ct: torch.Tensor, mri: torch.Tensor) -> dict[str, torch.Tensor]:
         # Encoder path
         ct_features = []
         mri_features = []
@@ -215,36 +229,41 @@ class MultimodalUNet3D(nn.Module):
         for i, decoder in enumerate(self.decoder):
             x = self.upsample(x)
             # Skip connections with fused features
-            skip = fused_features[-(i+1)]
+            skip = fused_features[-(i + 1)]
             x = torch.cat([x, skip], dim=1)
             x = decoder(x)
 
         # Final prediction
         if self.uncertainty:
             logits, log_var = self.final_conv(x)
-            return {'logits': logits, 'uncertainty': log_var}
+            return {"logits": logits, "uncertainty": log_var}
         else:
             logits = self.final_conv(x)
-            return {'logits': logits}
+            return {"logits": logits}
 
 
 class MultiObjectiveFitness:
-    """Multi-objective fitness evaluation for genetic algorithm"""
+    """Multi-objective fitness evaluation for genetic algorithm."""
 
-    def __init__(self, weights: Dict[str, float] = None):
+    def __init__(self, weights: dict[str, float] | None = None):
         self.weights = weights or {
-            'dice': 0.4,
-            'sensitivity': 0.2,
-            'specificity': 0.2,
-            'efficiency': 0.1,
-            'uncertainty': 0.1
+            "dice": 0.4,
+            "sensitivity": 0.2,
+            "specificity": 0.2,
+            "efficiency": 0.1,
+            "uncertainty": 0.1,
         }
 
-    def __call__(self, predictions: torch.Tensor, targets: torch.Tensor,
-                 model_params: int, inference_time: float,
-                 uncertainty: Optional[torch.Tensor] = None) -> float:
+    def __call__(
+        self,
+        predictions: torch.Tensor,
+        targets: torch.Tensor,
+        model_params: int,
+        inference_time: float,
+        uncertainty: torch.Tensor | None = None,
+    ) -> float:
         """
-        Calculate multi-objective fitness score
+        Calculate multi-objective fitness score.
 
         Args:
             predictions: Model predictions
@@ -273,17 +292,17 @@ class MultiObjectiveFitness:
 
         # Weighted combination
         fitness = (
-            self.weights['dice'] * dice +
-            self.weights['sensitivity'] * sensitivity +
-            self.weights['specificity'] * specificity +
-            self.weights['efficiency'] * efficiency +
-            self.weights['uncertainty'] * uncertainty_score
+            self.weights["dice"] * dice
+            + self.weights["sensitivity"] * sensitivity
+            + self.weights["specificity"] * specificity
+            + self.weights["efficiency"] * efficiency
+            + self.weights["uncertainty"] * uncertainty_score
         )
 
         return fitness
 
     def _dice_score(self, pred: np.ndarray, target: np.ndarray) -> float:
-        """Calculate Dice coefficient"""
+        """Calculate Dice coefficient."""
         pred_binary = pred > 0.5
         target_binary = target > 0.5
 
@@ -292,8 +311,8 @@ class MultiObjectiveFitness:
 
         return 2.0 * intersection / (total + 1e-8)
 
-    def _sensitivity_specificity(self, pred: np.ndarray, target: np.ndarray) -> Tuple[float, float]:
-        """Calculate sensitivity and specificity"""
+    def _sensitivity_specificity(self, pred: np.ndarray, target: np.ndarray) -> tuple[float, float]:
+        """Calculate sensitivity and specificity."""
         pred_binary = pred > 0.5
         target_binary = target > 0.5
 
@@ -308,7 +327,7 @@ class MultiObjectiveFitness:
         return sensitivity, specificity
 
     def _uncertainty_quality(self, pred: np.ndarray, target: np.ndarray, uncertainty: torch.Tensor) -> float:
-        """Evaluate uncertainty quality"""
+        """Evaluate uncertainty quality."""
         uncertainty_np = uncertainty.detach().cpu().numpy()
         correct = (pred > 0.5) == (target > 0.5)
 
@@ -320,48 +339,48 @@ class MultiObjectiveFitness:
 
 
 class Individual:
-    """Individual in genetic algorithm population"""
+    """Individual in genetic algorithm population."""
 
-    def __init__(self, genes: Dict[str, float] = None):
+    def __init__(self, genes: dict[str, float] | None = None):
         self.genes = genes or self._random_genes()
         self.fitness = 0.0
         self.age = 0
 
-    def _random_genes(self) -> Dict[str, float]:
-        """Generate random genes for network architecture"""
+    def _random_genes(self) -> dict[str, float]:
+        """Generate random genes for network architecture."""
         return {
-            'base_channels': random.choice([16, 32, 64, 128]),
-            'depth': random.randint(3, 6),
-            'attention_heads': random.choice([4, 8, 16]),
-            'dropout_rate': random.uniform(0.1, 0.5),
-            'learning_rate': random.uniform(1e-5, 1e-2),
-            'batch_size': random.choice([2, 4, 8, 16]),
-            'loss_weights': random.uniform(0.1, 2.0),
+            "base_channels": random.choice([16, 32, 64, 128]),
+            "depth": random.randint(3, 6),
+            "attention_heads": random.choice([4, 8, 16]),
+            "dropout_rate": random.uniform(0.1, 0.5),
+            "learning_rate": random.uniform(1e-5, 1e-2),
+            "batch_size": random.choice([2, 4, 8, 16]),
+            "loss_weights": random.uniform(0.1, 2.0),
         }
 
-    def mutate(self, mutation_rate: float) -> 'Individual':
-        """Create mutated offspring"""
+    def mutate(self, mutation_rate: float) -> Individual:
+        """Create mutated offspring."""
         new_genes = self.genes.copy()
 
         for gene_name, value in new_genes.items():
             if random.random() < mutation_rate:
-                if gene_name == 'base_channels':
+                if gene_name == "base_channels":
                     new_genes[gene_name] = random.choice([16, 32, 64, 128])
-                elif gene_name == 'depth':
+                elif gene_name == "depth":
                     new_genes[gene_name] = max(3, min(6, value + random.randint(-1, 1)))
-                elif gene_name == 'attention_heads':
+                elif gene_name == "attention_heads":
                     new_genes[gene_name] = random.choice([4, 8, 16])
-                elif gene_name in ['dropout_rate', 'learning_rate', 'loss_weights']:
+                elif gene_name in ["dropout_rate", "learning_rate", "loss_weights"]:
                     noise = random.gauss(0, 0.1)
                     new_genes[gene_name] = max(0.01, value + noise)
-                elif gene_name == 'batch_size':
+                elif gene_name == "batch_size":
                     new_genes[gene_name] = random.choice([2, 4, 8, 16])
 
         return Individual(new_genes)
 
     @staticmethod
-    def crossover(parent1: 'Individual', parent2: 'Individual') -> Tuple['Individual', 'Individual']:
-        """Create offspring through crossover"""
+    def crossover(parent1: Individual, parent2: Individual) -> tuple[Individual, Individual]:
+        """Create offspring through crossover."""
         child1_genes = {}
         child2_genes = {}
 
@@ -377,22 +396,22 @@ class Individual:
 
 
 class ImprovedGeneticAlgorithm:
-    """Improved Genetic Algorithm for neural architecture optimization"""
+    """Improved Genetic Algorithm for neural architecture optimization."""
 
     def __init__(self, config: GAConfig, fitness_function: MultiObjectiveFitness):
         self.config = config
         self.fitness_function = fitness_function
-        self.population: List[Individual] = []
+        self.population: list[Individual] = []
         self.generation = 0
-        self.best_individual: Optional[Individual] = None
-        self.fitness_history: List[float] = []
+        self.best_individual: Individual | None = None
+        self.fitness_history: list[float] = []
 
     def initialize_population(self):
-        """Initialize random population"""
+        """Initialize random population."""
         self.population = [Individual() for _ in range(self.config.population_size)]
 
     def evaluate_population(self, validation_data) -> None:
-        """Evaluate fitness for entire population"""
+        """Evaluate fitness for entire population."""
         for individual in self.population:
             # Here you would train/evaluate the model with the individual's genes
             # For demonstration, we'll use a placeholder
@@ -407,7 +426,7 @@ class ImprovedGeneticAlgorithm:
         self.fitness_history.append(current_best.fitness)
 
     def _evaluate_individual(self, individual: Individual, validation_data) -> float:
-        """Evaluate single individual (placeholder)"""
+        """Evaluate single individual (placeholder)."""
         # In practice, this would:
         # 1. Create model with individual's architecture
         # 2. Train model
@@ -415,8 +434,8 @@ class ImprovedGeneticAlgorithm:
         # 4. Return fitness score
         return random.random()  # Placeholder
 
-    def selection(self) -> List[Individual]:
-        """Tournament selection with diversity preservation"""
+    def selection(self) -> list[Individual]:
+        """Tournament selection with diversity preservation."""
         selected = []
 
         for _ in range(self.config.population_size):
@@ -426,8 +445,8 @@ class ImprovedGeneticAlgorithm:
 
         return selected
 
-    def reproduction(self, selected: List[Individual]) -> List[Individual]:
-        """Create new generation through crossover and mutation"""
+    def reproduction(self, selected: list[Individual]) -> list[Individual]:
+        """Create new generation through crossover and mutation."""
         new_population = []
 
         # Elite preservation
@@ -451,10 +470,10 @@ class ImprovedGeneticAlgorithm:
 
             new_population.extend([child1, child2])
 
-        return new_population[:self.config.population_size]
+        return new_population[: self.config.population_size]
 
     def evolve(self, validation_data) -> Individual:
-        """Run genetic algorithm evolution"""
+        """Run genetic algorithm evolution."""
         self.initialize_population()
 
         for generation in range(self.config.generations):
@@ -469,7 +488,7 @@ class ImprovedGeneticAlgorithm:
 
             # Adaptive mutation rate
             if generation % 10 == 0 and generation > 0:
-                avg_fitness = np.mean([ind.fitness for ind in self.population])
+                np.mean([ind.fitness for ind in self.population])
                 if len(self.fitness_history) > 10 and np.std(self.fitness_history[-10:]) < 0.01:
                     self.config.mutation_rate = min(0.5, self.config.mutation_rate * 1.2)
                 else:
@@ -481,7 +500,7 @@ class ImprovedGeneticAlgorithm:
 
 
 class EnhancedBrainTumorSegmentation:
-    """Main framework for enhanced brain tumor segmentation"""
+    """Main framework for enhanced brain tumor segmentation."""
 
     def __init__(self, config: GAConfig = None):
         self.config = config or GAConfig()
@@ -491,52 +510,52 @@ class EnhancedBrainTumorSegmentation:
         self.best_architecture = None
 
     def optimize_architecture(self, train_data, val_data):
-        """Optimize neural architecture using genetic algorithm"""
+        """Optimize neural architecture using genetic algorithm."""
         print("Starting genetic algorithm optimization...")
         self.best_architecture = self.genetic_algorithm.evolve(val_data)
         print(f"Best architecture found: {self.best_architecture.genes}")
         return self.best_architecture
 
     def build_model(self, architecture: Individual = None) -> MultimodalUNet3D:
-        """Build model from genetic algorithm results"""
+        """Build model from genetic algorithm results."""
         if architecture is None:
             architecture = self.best_architecture
 
         genes = architecture.genes
         model = MultimodalUNet3D(
-            base_channels=int(genes['base_channels']),
+            base_channels=int(genes["base_channels"]),
             num_classes=4,  # Background, Core, Edema, Enhancing
-            uncertainty=True
+            uncertainty=True,
         )
 
         return model
 
     def train(self, train_loader, val_loader, epochs: int = 100):
-        """Train the optimized model"""
+        """Train the optimized model."""
         if self.best_architecture is None:
             raise ValueError("Must run optimize_architecture first")
 
         self.model = self.build_model()
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
 
         # Training implementation would go here
         # Including uncertainty-aware loss, data augmentation, etc.
         pass
 
-    def evaluate(self, test_loader) -> Dict[str, float]:
-        """Comprehensive evaluation with medical imaging metrics"""
+    def evaluate(self, test_loader) -> dict[str, float]:
+        """Comprehensive evaluation with medical imaging metrics."""
         if self.model is None:
             raise ValueError("Must train model first")
 
         metrics = {
-            'dice_core': 0.0,
-            'dice_edema': 0.0,
-            'dice_enhancing': 0.0,
-            'hausdorff_95': 0.0,
-            'sensitivity': 0.0,
-            'specificity': 0.0,
-            'surface_distance': 0.0
+            "dice_core": 0.0,
+            "dice_edema": 0.0,
+            "dice_enhancing": 0.0,
+            "hausdorff_95": 0.0,
+            "sensitivity": 0.0,
+            "specificity": 0.0,
+            "surface_distance": 0.0,
         }
 
         # Evaluation implementation would go here
@@ -544,23 +563,18 @@ class EnhancedBrainTumorSegmentation:
 
 
 def main():
-    """Main execution function"""
+    """Main execution function."""
     # Configuration
-    config = GAConfig(
-        population_size=20,
-        generations=50,
-        mutation_rate=0.15,
-        crossover_rate=0.8
-    )
+    config = GAConfig(population_size=20, generations=50, mutation_rate=0.15, crossover_rate=0.8)
 
     # Initialize framework
     framework = EnhancedBrainTumorSegmentation(config)
 
     # Load data (placeholder)
-    train_data, val_data, test_data = None, None, None
+    train_data, val_data, _test_data = None, None, None
 
     # Optimize architecture
-    best_arch = framework.optimize_architecture(train_data, val_data)
+    framework.optimize_architecture(train_data, val_data)
 
     # Train model
     # framework.train(train_data, val_data)

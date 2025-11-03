@@ -8,7 +8,7 @@
 
 **应对策略**:
 - [ ] **MSD (Medical Segmentation Decathlon)**: 添加肝脏、心脏、肺部分割验证
-- [ ] **LiTS (Liver Tumor Segmentation)**: 验证方法在CT图像上的泛化性
+- [ ] **list (Liver Tumor Segmentation)**: 验证方法在CT图像上的泛化性
 - [ ] **KiTS (Kidney Tumor Segmentation)**: 验证3D分割能力
 - [ ] **多中心数据**: 收集2-3个不同医院的脑肿瘤数据
 
@@ -16,20 +16,20 @@
 ```python
 # 跨数据集验证脚本
 def cross_dataset_validation():
-    datasets = ['BRaTS', 'MSD_Liver', 'LiTS', 'KiTS']
+    datasets = ["BRaTS", "MSD_Liver", "list", "KiTS"]
     results = {}
-    
+
     for dataset in datasets:
         # 加载预训练模型
         model = load_pretrained_model()
-        
+
         # 微调或直接测试
-        if dataset != 'BRaTS':
+        if dataset != "BRaTS":
             model = fine_tune_model(model, dataset)
-        
+
         # 评估性能
         results[dataset] = evaluate_model(model, dataset)
-    
+
     return results
 ```
 
@@ -52,13 +52,13 @@ def complexity_analysis():
         start_time = time.time()
         model(input_tensor)
         time_results[input_size] = time.time() - start_time
-    
+
     # 空间复杂度分析
     memory_results = {}
     for batch_size in [1, 2, 4, 8]:
         memory_usage = measure_memory_usage(model, batch_size)
         memory_results[batch_size] = memory_usage
-    
+
     return time_results, memory_results
 ```
 
@@ -77,17 +77,17 @@ def complexity_analysis():
 ```python
 def compare_recent_methods():
     methods = {
-        'TransUNet': TransUNet(),
-        'Swin-UNet': SwinUNet(),
-        'MedT': MedicalTransformer(),
-        'UNet++': UNetPlusPlus(),
-        'DeepLabV3+': DeepLabV3Plus()
+        "TransUNet": TransUNet(),
+        "Swin-UNet": SwinUNet(),
+        "MedT": MedicalTransformer(),
+        "UNet++": UNetPlusPlus(),
+        "DeepLabV3+": DeepLabV3Plus(),
     }
-    
+
     results = {}
     for name, model in methods.items():
         results[name] = evaluate_method(model)
-    
+
     return results
 ```
 
@@ -106,20 +106,20 @@ def compare_recent_methods():
 def clinical_validation():
     # 准备评估数据
     test_cases = load_test_cases()
-    
+
     # 生成分割结果
     predictions = model.predict(test_cases)
-    
+
     # 临床指标计算
     clinical_metrics = {
-        'tumor_volume': calculate_tumor_volume(predictions),
-        'shape_features': extract_shape_features(predictions),
-        'diagnostic_accuracy': evaluate_diagnostic_accuracy(predictions)
+        "tumor_volume": calculate_tumor_volume(predictions),
+        "shape_features": extract_shape_features(predictions),
+        "diagnostic_accuracy": evaluate_diagnostic_accuracy(predictions),
     }
-    
+
     # 放射科医生评估
     radiologist_scores = collect_radiologist_feedback(predictions)
-    
+
     return clinical_metrics, radiologist_scores
 ```
 
@@ -137,19 +137,19 @@ def clinical_validation():
 ```python
 def extended_ablation_study():
     # 注意力机制消融
-    attention_types = ['self', 'cross', 'hybrid', 'none']
+    attention_types = ["self", "cross", "hybrid", "none"]
     attention_results = {}
     for attn_type in attention_types:
         model = create_model(attention_type=attn_type)
         attention_results[attn_type] = evaluate_model(model)
-    
+
     # 遗传算法消融
-    ga_strategies = ['random', 'grid_search', 'bayesian', 'genetic']
+    ga_strategies = ["random", "grid_search", "bayesian", "genetic"]
     ga_results = {}
     for strategy in ga_strategies:
         model = optimize_model(strategy=strategy)
         ga_results[strategy] = evaluate_model(model)
-    
+
     return attention_results, ga_results
 ```
 
@@ -185,78 +185,75 @@ def extended_ablation_study():
 ### 1. 跨数据集验证脚本
 ```python
 # cross_dataset_validation.py
-import torch
-from datasets import BRaTS, MSD, LiTS, KiTS
+from datasets import MSD, BRaTS, KiTS, list
 from models import MultimodalSegmentation
 from utils import evaluate_metrics
 
+
 def main():
-    datasets = {
-        'BRaTS': BRaTS(),
-        'MSD_Liver': MSD('liver'),
-        'LiTS': LiTS(),
-        'KiTS': KiTS()
-    }
-    
+    datasets = {"BRaTS": BRaTS(), "MSD_Liver": MSD("liver"), "list": list(), "KiTS": KiTS()}
+
     model = MultimodalSegmentation()
     results = {}
-    
+
     for name, dataset in datasets.items():
         print(f"Evaluating on {name}...")
         test_loader = dataset.get_test_loader()
         metrics = evaluate_metrics(model, test_loader)
         results[name] = metrics
-        
-    save_results(results, 'cross_dataset_results.json')
+
+    save_results(results, "cross_dataset_results.json")
 ```
 
 ### 2. 复杂度分析脚本
 ```python
 # complexity_analysis.py
 import time
+
 import psutil
 import torch
 from models import MultimodalSegmentation
 
+
 def analyze_complexity():
     model = MultimodalSegmentation()
     model.eval()
-    
+
     # 时间复杂度分析
     input_sizes = [64, 128, 256, 512]
     time_results = {}
-    
+
     for size in input_sizes:
         input_tensor = torch.randn(1, 2, size, size, size)
-        
+
         # 预热
         for _ in range(10):
             _ = model(input_tensor)
-        
+
         # 计时
         start_time = time.time()
         for _ in range(100):
             _ = model(input_tensor)
         end_time = time.time()
-        
+
         time_results[size] = (end_time - start_time) / 100
-    
+
     # 空间复杂度分析
     memory_results = {}
     batch_sizes = [1, 2, 4, 8]
-    
+
     for batch_size in batch_sizes:
         input_tensor = torch.randn(batch_size, 2, 128, 128, 128)
-        
+
         # 测量内存使用
         process = psutil.Process()
         memory_before = process.memory_info().rss / 1024 / 1024  # MB
-        
+
         _ = model(input_tensor)
-        
+
         memory_after = process.memory_info().rss / 1024 / 1024  # MB
         memory_results[batch_size] = memory_after - memory_before
-    
+
     return time_results, memory_results
 ```
 
@@ -264,60 +261,55 @@ def analyze_complexity():
 ```python
 # clinical_validation.py
 import numpy as np
-from scipy import ndimage
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+
 
 def calculate_clinical_metrics(predictions, ground_truth):
-    """计算临床相关指标"""
+    """计算临床相关指标."""
     metrics = {}
-    
+
     # 肿瘤体积
     tumor_volumes = []
     for pred, gt in zip(predictions, ground_truth):
         pred_volume = np.sum(pred > 0) * 0.001  # 转换为ml
         gt_volume = np.sum(gt > 0) * 0.001
         tumor_volumes.append((pred_volume, gt_volume))
-    
-    metrics['tumor_volume_correlation'] = np.corrcoef(
-        [v[0] for v in tumor_volumes], 
-        [v[1] for v in tumor_volumes]
-    )[0, 1]
-    
+
+    metrics["tumor_volume_correlation"] = np.corrcoef([v[0] for v in tumor_volumes], [v[1] for v in tumor_volumes])[
+        0, 1
+    ]
+
     # 形状特征
     shape_features = []
     for pred, gt in zip(predictions, ground_truth):
         pred_features = extract_shape_features(pred)
         gt_features = extract_shape_features(gt)
         shape_features.append((pred_features, gt_features))
-    
-    metrics['shape_similarity'] = calculate_shape_similarity(shape_features)
-    
+
+    metrics["shape_similarity"] = calculate_shape_similarity(shape_features)
+
     return metrics
 
+
 def extract_shape_features(mask):
-    """提取形状特征"""
+    """提取形状特征."""
     # 计算表面积
     surface_area = calculate_surface_area(mask)
-    
+
     # 计算球形度
     volume = np.sum(mask > 0)
     sphericality = (36 * np.pi * volume**2) / (surface_area**3)
-    
+
     # 计算紧致度
-    compactness = surface_area / (volume**(2/3))
-    
-    return {
-        'surface_area': surface_area,
-        'sphericality': sphericality,
-        'compactness': compactness
-    }
+    compactness = surface_area / (volume ** (2 / 3))
+
+    return {"surface_area": surface_area, "sphericality": sphericality, "compactness": compactness}
 ```
 
 ## 📈 预期结果
 
 ### 1. 跨数据集验证结果
 - **MSD Liver**: Dice > 0.85
-- **LiTS**: Dice > 0.80
+- **list**: Dice > 0.80
 - **KiTS**: Dice > 0.75
 
 ### 2. 计算复杂度结果
