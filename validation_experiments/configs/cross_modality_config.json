@@ -3,35 +3,13 @@
   "description": "\u8de8\u6a21\u6001\u7ec4\u5408\u9a8c\u8bc1\u5b9e\u9a8c",
   "dataset": "brats_2020",
   "modality_combinations": [
-    [
-      "T1",
-      "T1ce"
-    ],
-    [
-      "T1",
-      "T2"
-    ],
-    [
-      "T1",
-      "FLAIR"
-    ],
-    [
-      "T1ce",
-      "T2"
-    ],
-    [
-      "T1",
-      "T1ce",
-      "T2",
-      "FLAIR"
-    ]
+    ["T1", "T1ce"],
+    ["T1", "T2"],
+    ["T1", "FLAIR"],
+    ["T1ce", "T2"],
+    ["T1", "T1ce", "T2", "FLAIR"]
   ],
-  "metrics": [
-    "dice",
-    "hausdorff",
-    "sensitivity",
-    "specificity"
-  ],
+  "metrics": ["dice", "hausdorff", "sensitivity", "specificity"],
   "expected_results": {
     "T1_T1ce": {
       "dice_wt": 0.8,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Advanced Data Preprocessing Pipeline for Multimodal Brain Tumor Segmentation
+Advanced Data Preprocessing Pipeline for Multimodal Brain Tumor Segmentation.
 
 This module implements sophisticated preprocessing techniques for CT and MRI brain images,
 including advanced registration, normalization, and augmentation strategies specifically
@@ -14,44 +14,42 @@ Key Features:
 5. Cross-modal intensity harmonization
 """
 
-import numpy as np
-import cv2
-import torch
-import torch.nn.functional as F
-from typing import Tuple, List, Dict, Optional, Union
-from pathlib import Path
-import nibabel as nib
-from scipy import ndimage
-from scipy.optimize import minimize
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-import warnings
+from pathlib import Path
+
+import cv2
+import nibabel as nib
+import numpy as np
+from scipy import ndimage
+from scipy.optimize import minimize
 
 
 @dataclass
 class PreprocessingConfig:
-    """Configuration for preprocessing pipeline"""
-    target_spacing: Tuple[float, float, float] = (1.0, 1.0, 1.0)  # mm
-    target_size: Tuple[int, int, int] = (128, 128, 128)
-    intensity_clipping: Tuple[float, float] = (0.5, 99.5)  # percentiles
+    """Configuration for preprocessing pipeline."""
+
+    target_spacing: tuple[float, float, float] = (1.0, 1.0, 1.0)  # mm
+    target_size: tuple[int, int, int] = (128, 128, 128)
+    intensity_clipping: tuple[float, float] = (0.5, 99.5)  # percentiles
     bias_field_correction: bool = True
     skull_stripping: bool = True
-    registration_method: str = 'mutual_information'
-    normalization_method: str = 'zscore_robust'
+    registration_method: str = "mutual_information"
+    normalization_method: str = "zscore_robust"
     augmentation_probability: float = 0.5
 
 
 class MutualInformationRegistration:
-    """Advanced mutual information-based image registration"""
+    """Advanced mutual information-based image registration."""
 
     def __init__(self, bins: int = 64, learning_rate: float = 0.01, max_iterations: int = 300):
         self.bins = bins
         self.learning_rate = learning_rate
         self.max_iterations = max_iterations
 
-    def mutual_information(self, fixed: np.ndarray, moving: np.ndarray,
-                          transform_params: np.ndarray) -> float:
+    def mutual_information(self, fixed: np.ndarray, moving: np.ndarray, transform_params: np.ndarray) -> float:
         """
         Calculate mutual information between fixed and moving images.
 
@@ -62,9 +60,7 @@ class MutualInformationRegistration:
         moving_transformed = self._apply_affine_transform(moving, transform_params)
 
         # Compute joint histogram
-        hist_2d, _, _ = np.histogram2d(
-            fixed.ravel(), moving_transformed.ravel(), bins=self.bins
-        )
+        hist_2d, _, _ = np.histogram2d(fixed.ravel(), moving_transformed.ravel(), bins=self.bins)
 
         # Add small epsilon to avoid log(0)
         hist_2d = hist_2d + np.finfo(float).eps
@@ -86,62 +82,36 @@ class MutualInformationRegistration:
         return -mi  # Negative for minimization
 
     def _apply_affine_transform(self, image: np.ndarray, params: np.ndarray) -> np.ndarray:
-        """Apply affine transformation to image"""
+        """Apply affine transformation to image."""
         # Extract transformation parameters
         tx, ty, tz, rx, ry, rz, sx, sy, sz = params
 
         # Create transformation matrices
-        translation = np.array([
-            [1, 0, 0, tx],
-            [0, 1, 0, ty],
-            [0, 0, 1, tz],
-            [0, 0, 0, 1]
-        ])
+        translation = np.array([[1, 0, 0, tx], [0, 1, 0, ty], [0, 0, 1, tz], [0, 0, 0, 1]])
 
         # Rotation matrices
         cos_rx, sin_rx = np.cos(rx), np.sin(rx)
         cos_ry, sin_ry = np.cos(ry), np.sin(ry)
         cos_rz, sin_rz = np.cos(rz), np.sin(rz)
 
-        rot_x = np.array([
-            [1, 0, 0, 0],
-            [0, cos_rx, -sin_rx, 0],
-            [0, sin_rx, cos_rx, 0],
-            [0, 0, 0, 1]
-        ])
+        rot_x = np.array([[1, 0, 0, 0], [0, cos_rx, -sin_rx, 0], [0, sin_rx, cos_rx, 0], [0, 0, 0, 1]])
 
-        rot_y = np.array([
-            [cos_ry, 0, sin_ry, 0],
-            [0, 1, 0, 0],
-            [-sin_ry, 0, cos_ry, 0],
-            [0, 0, 0, 1]
-        ])
+        rot_y = np.array([[cos_ry, 0, sin_ry, 0], [0, 1, 0, 0], [-sin_ry, 0, cos_ry, 0], [0, 0, 0, 1]])
 
-        rot_z = np.array([
-            [cos_rz, -sin_rz, 0, 0],
-            [sin_rz, cos_rz, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
+        rot_z = np.array([[cos_rz, -sin_rz, 0, 0], [sin_rz, cos_rz, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
 
         # Scaling matrix
-        scaling = np.array([
-            [sx, 0, 0, 0],
-            [0, sy, 0, 0],
-            [0, 0, sz, 0],
-            [0, 0, 0, 1]
-        ])
+        scaling = np.array([[sx, 0, 0, 0], [0, sy, 0, 0], [0, 0, sz, 0], [0, 0, 0, 1]])
 
         # Combined transformation
         transform = translation @ rot_z @ rot_y @ rot_x @ scaling
 
         # Apply transformation (simplified for demonstration)
         # In practice, would use proper 3D transformation
-        transformed = ndimage.affine_transform(image, transform[:3, :3],
-                                             offset=transform[:3, 3])
+        transformed = ndimage.affine_transform(image, transform[:3, :3], offset=transform[:3, 3])
         return transformed
 
-    def register(self, fixed: np.ndarray, moving: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def register(self, fixed: np.ndarray, moving: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Register moving image to fixed image using mutual information.
 
@@ -153,18 +123,24 @@ class MutualInformationRegistration:
 
         # Optimization bounds
         bounds = [
-            (-20, 20), (-20, 20), (-20, 20),  # translation
-            (-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2),  # rotation (radians)
-            (0.8, 1.2), (0.8, 1.2), (0.8, 1.2)  # scaling
+            (-20, 20),
+            (-20, 20),
+            (-20, 20),  # translation
+            (-0.2, 0.2),
+            (-0.2, 0.2),
+            (-0.2, 0.2),  # rotation (radians)
+            (0.8, 1.2),
+            (0.8, 1.2),
+            (0.8, 1.2),  # scaling
         ]
 
         # Optimize
         result = minimize(
             lambda params: self.mutual_information(fixed, moving, params),
             initial_params,
-            method='L-BFGS-B',
+            method="L-BFGS-B",
             bounds=bounds,
-            options={'maxiter': self.max_iterations}
+            options={"maxiter": self.max_iterations},
         )
 
         # Apply final transformation
@@ -175,11 +151,11 @@ class MutualInformationRegistration:
 
 
 class AdvancedNormalization:
-    """Advanced normalization techniques for medical images"""
+    """Advanced normalization techniques for medical images."""
 
     @staticmethod
-    def zscore_normalization(image: np.ndarray, mask: Optional[np.ndarray] = None) -> np.ndarray:
-        """Z-score normalization within brain mask"""
+    def zscore_normalization(image: np.ndarray, mask: np.ndarray | None = None) -> np.ndarray:
+        """Z-score normalization within brain mask."""
         if mask is not None:
             brain_voxels = image[mask > 0]
             mean_val = np.mean(brain_voxels)
@@ -192,8 +168,8 @@ class AdvancedNormalization:
         return normalized
 
     @staticmethod
-    def robust_zscore_normalization(image: np.ndarray, mask: Optional[np.ndarray] = None) -> np.ndarray:
-        """Robust Z-score using median and MAD"""
+    def robust_zscore_normalization(image: np.ndarray, mask: np.ndarray | None = None) -> np.ndarray:
+        """Robust Z-score using median and MAD."""
         if mask is not None:
             brain_voxels = image[mask > 0]
         else:
@@ -209,9 +185,8 @@ class AdvancedNormalization:
         return normalized
 
     @staticmethod
-    def histogram_matching(source: np.ndarray, reference: np.ndarray,
-                          mask: Optional[np.ndarray] = None) -> np.ndarray:
-        """Match histogram of source image to reference image"""
+    def histogram_matching(source: np.ndarray, reference: np.ndarray, mask: np.ndarray | None = None) -> np.ndarray:
+        """Match histogram of source image to reference image."""
         if mask is not None:
             source_values = source[mask > 0]
             ref_values = reference[mask > 0]
@@ -239,7 +214,7 @@ class AdvancedNormalization:
         return matched.reshape(source.shape)
 
     @staticmethod
-    def nyul_normalization(images: List[np.ndarray], percentiles: List[float] = None) -> List[np.ndarray]:
+    def nyul_normalization(images: list[np.ndarray], percentiles: list[float] | None = None) -> list[np.ndarray]:
         """
         Nyúl histogram normalization for multiple images.
 
@@ -269,13 +244,13 @@ class AdvancedNormalization:
 
 
 class BiasFieldCorrection:
-    """N4 bias field correction implementation"""
+    """N4 bias field correction implementation."""
 
     def __init__(self, max_iterations: int = 50, convergence_threshold: float = 0.001):
         self.max_iterations = max_iterations
         self.convergence_threshold = convergence_threshold
 
-    def correct_bias_field(self, image: np.ndarray, mask: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    def correct_bias_field(self, image: np.ndarray, mask: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
         """
         Simplified bias field correction using polynomial fitting.
 
@@ -285,7 +260,7 @@ class BiasFieldCorrection:
             mask = image > 0
 
         # Create coordinate grids
-        z, y, x = np.mgrid[0:image.shape[0], 0:image.shape[1], 0:image.shape[2]]
+        z, y, x = np.mgrid[0 : image.shape[0], 0 : image.shape[1], 0 : image.shape[2]]
         coords = np.column_stack([z.ravel(), y.ravel(), x.ravel()])
 
         # Fit polynomial to log intensities
@@ -293,8 +268,8 @@ class BiasFieldCorrection:
         mask_flat = mask.ravel()
 
         # Use polynomial features (simplified)
-        from sklearn.preprocessing import PolynomialFeatures
         from sklearn.linear_model import Ridge
+        from sklearn.preprocessing import PolynomialFeatures
 
         poly = PolynomialFeatures(degree=3)
         coords_poly = poly.fit_transform(coords[mask_flat])
@@ -314,14 +289,13 @@ class BiasFieldCorrection:
 
 
 class MedicalImageAugmentation:
-    """Medical image-specific augmentation techniques"""
+    """Medical image-specific augmentation techniques."""
 
     def __init__(self, config: PreprocessingConfig):
         self.config = config
 
-    def elastic_deformation(self, image: np.ndarray, alpha: float = 2000,
-                           sigma: float = 50) -> np.ndarray:
-        """Apply elastic deformation to simulate anatomical variations"""
+    def elastic_deformation(self, image: np.ndarray, alpha: float = 2000, sigma: float = 50) -> np.ndarray:
+        """Apply elastic deformation to simulate anatomical variations."""
         shape = image.shape
 
         # Generate random displacement fields
@@ -330,33 +304,32 @@ class MedicalImageAugmentation:
         dz = np.random.randn(*shape) * sigma
 
         # Smooth displacement fields
-        dx = ndimage.gaussian_filter(dx, sigma, mode='constant', cval=0) * alpha
-        dy = ndimage.gaussian_filter(dy, sigma, mode='constant', cval=0) * alpha
-        dz = ndimage.gaussian_filter(dz, sigma, mode='constant', cval=0) * alpha
+        dx = ndimage.gaussian_filter(dx, sigma, mode="constant", cval=0) * alpha
+        dy = ndimage.gaussian_filter(dy, sigma, mode="constant", cval=0) * alpha
+        dz = ndimage.gaussian_filter(dz, sigma, mode="constant", cval=0) * alpha
 
         # Create coordinate grids
-        z, y, x = np.mgrid[0:shape[0], 0:shape[1], 0:shape[2]]
+        z, y, x = np.mgrid[0 : shape[0], 0 : shape[1], 0 : shape[2]]
         indices = z + dz, y + dy, x + dx
 
         # Apply deformation
-        deformed = ndimage.map_coordinates(image, indices, order=1, mode='reflect')
+        deformed = ndimage.map_coordinates(image, indices, order=1, mode="reflect")
         return deformed
 
-    def add_noise(self, image: np.ndarray, noise_type: str = 'gaussian',
-                  intensity: float = 0.1) -> np.ndarray:
-        """Add realistic noise to medical images"""
-        if noise_type == 'gaussian':
+    def add_noise(self, image: np.ndarray, noise_type: str = "gaussian", intensity: float = 0.1) -> np.ndarray:
+        """Add realistic noise to medical images."""
+        if noise_type == "gaussian":
             noise = np.random.normal(0, intensity * np.std(image), image.shape)
             return image + noise
 
-        elif noise_type == 'rician':
+        elif noise_type == "rician":
             # Rician noise (common in MRI)
             sigma = intensity * np.std(image)
             real_part = image + np.random.normal(0, sigma, image.shape)
             imag_part = np.random.normal(0, sigma, image.shape)
             return np.sqrt(real_part**2 + imag_part**2)
 
-        elif noise_type == 'poisson':
+        elif noise_type == "poisson":
             # Poisson noise (common in CT)
             # Scale image to appropriate range for Poisson
             scaled = image / np.max(image) * 100
@@ -366,7 +339,7 @@ class MedicalImageAugmentation:
         return image
 
     def simulate_motion_artifacts(self, image: np.ndarray, severity: float = 0.1) -> np.ndarray:
-        """Simulate motion artifacts in medical images"""
+        """Simulate motion artifacts in medical images."""
         # Simple motion blur simulation
         kernel_size = int(severity * 10) + 1
         if kernel_size % 2 == 0:
@@ -384,7 +357,7 @@ class MedicalImageAugmentation:
         return blurred
 
     def _create_motion_blur_kernel(self, size: int, angle: float) -> np.ndarray:
-        """Create motion blur kernel"""
+        """Create motion blur kernel."""
         kernel = np.zeros((size, size))
         center = size // 2
 
@@ -401,12 +374,12 @@ class MedicalImageAugmentation:
         return kernel
 
     def intensity_shift(self, image: np.ndarray, shift_range: float = 0.2) -> np.ndarray:
-        """Apply random intensity shifts"""
+        """Apply random intensity shifts."""
         shift_factor = np.random.uniform(1 - shift_range, 1 + shift_range)
         return image * shift_factor
 
-    def gamma_correction(self, image: np.ndarray, gamma_range: Tuple[float, float] = (0.8, 1.2)) -> np.ndarray:
-        """Apply random gamma correction"""
+    def gamma_correction(self, image: np.ndarray, gamma_range: tuple[float, float] = (0.8, 1.2)) -> np.ndarray:
+        """Apply random gamma correction."""
         gamma = np.random.uniform(*gamma_range)
         # Normalize to [0, 1] for gamma correction
         img_norm = (image - np.min(image)) / (np.max(image) - np.min(image) + 1e-8)
@@ -416,7 +389,7 @@ class MedicalImageAugmentation:
 
 
 class AdvancedPreprocessingPipeline:
-    """Complete preprocessing pipeline for multimodal brain tumor segmentation"""
+    """Complete preprocessing pipeline for multimodal brain tumor segmentation."""
 
     def __init__(self, config: PreprocessingConfig = None):
         self.config = config or PreprocessingConfig()
@@ -429,9 +402,13 @@ class AdvancedPreprocessingPipeline:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
-    def preprocess_pair(self, ct_path: Union[str, Path], mri_path: Union[str, Path],
-                       mask_path: Optional[Union[str, Path]] = None,
-                       apply_augmentation: bool = False) -> Dict[str, np.ndarray]:
+    def preprocess_pair(
+        self,
+        ct_path: str | Path,
+        mri_path: str | Path,
+        mask_path: str | Path | None = None,
+        apply_augmentation: bool = False,
+    ) -> dict[str, np.ndarray]:
         """
         Complete preprocessing of CT-MRI pair.
 
@@ -477,13 +454,13 @@ class AdvancedPreprocessingPipeline:
             mask_registered = None
 
         # Intensity normalization
-        if self.config.normalization_method == 'zscore':
+        if self.config.normalization_method == "zscore":
             ct_normalized = self.normalization.zscore_normalization(ct_img, mask)
             mri_normalized = self.normalization.zscore_normalization(mri_registered, mask_registered)
-        elif self.config.normalization_method == 'zscore_robust':
+        elif self.config.normalization_method == "zscore_robust":
             ct_normalized = self.normalization.robust_zscore_normalization(ct_img, mask)
             mri_normalized = self.normalization.robust_zscore_normalization(mri_registered, mask_registered)
-        elif self.config.normalization_method == 'histogram_matching':
+        elif self.config.normalization_method == "histogram_matching":
             ct_normalized = ct_img
             mri_normalized = self.normalization.histogram_matching(mri_registered, ct_img, mask)
         else:
@@ -495,7 +472,7 @@ class AdvancedPreprocessingPipeline:
         mri_resampled = self._resample_image(mri_normalized, self.config.target_size)
 
         if mask_registered is not None:
-            mask_resampled = self._resample_image(mask_registered, self.config.target_size, interpolation='nearest')
+            mask_resampled = self._resample_image(mask_registered, self.config.target_size, interpolation="nearest")
         else:
             mask_resampled = None
 
@@ -506,20 +483,20 @@ class AdvancedPreprocessingPipeline:
             )
 
         result = {
-            'ct': ct_resampled,
-            'mri': mri_resampled,
-            'mask': mask_resampled,
-            'transform_params': transform_params,
-            'quality_scores': {'ct': ct_quality, 'mri': mri_quality}
+            "ct": ct_resampled,
+            "mri": mri_resampled,
+            "mask": mask_resampled,
+            "transform_params": transform_params,
+            "quality_scores": {"ct": ct_quality, "mri": mri_quality},
         }
 
         return result
 
-    def _load_medical_image(self, path: Union[str, Path]) -> np.ndarray:
-        """Load medical image (NIfTI format)"""
+    def _load_medical_image(self, path: str | Path) -> np.ndarray:
+        """Load medical image (NIfTI format)."""
         path = Path(path)
 
-        if path.suffix in ['.nii', '.nii.gz']:
+        if path.suffix in [".nii", ".nii.gz"]:
             img = nib.load(str(path))
             return img.get_fdata()
         else:
@@ -530,7 +507,7 @@ class AdvancedPreprocessingPipeline:
             return img.astype(np.float32)
 
     def _assess_image_quality(self, image: np.ndarray) -> float:
-        """Assess image quality using various metrics"""
+        """Assess image quality using various metrics."""
         # Signal-to-noise ratio estimation
         signal = np.mean(image[image > 0])
         noise = np.std(image[image > 0])
@@ -549,20 +526,17 @@ class AdvancedPreprocessingPipeline:
             sharpness = np.mean(np.sqrt(grad_x**2 + grad_y**2))
 
         # Combine metrics (normalize and weight)
-        quality_score = (
-            0.4 * min(snr / 10.0, 1.0) +
-            0.3 * min(contrast / 100.0, 1.0) +
-            0.3 * min(sharpness / 50.0, 1.0)
-        )
+        quality_score = 0.4 * min(snr / 10.0, 1.0) + 0.3 * min(contrast / 100.0, 1.0) + 0.3 * min(sharpness / 50.0, 1.0)
 
         return quality_score
 
-    def _resample_image(self, image: np.ndarray, target_size: Tuple[int, int, int],
-                       interpolation: str = 'linear') -> np.ndarray:
-        """Resample image to target size"""
+    def _resample_image(
+        self, image: np.ndarray, target_size: tuple[int, int, int], interpolation: str = "linear"
+    ) -> np.ndarray:
+        """Resample image to target size."""
         if image.ndim == 2:
             # 2D image
-            if interpolation == 'nearest':
+            if interpolation == "nearest":
                 interpolation_cv = cv2.INTER_NEAREST
             else:
                 interpolation_cv = cv2.INTER_LINEAR
@@ -574,7 +548,7 @@ class AdvancedPreprocessingPipeline:
             # 3D image - resample each dimension
             zoom_factors = [target_size[i] / image.shape[i] for i in range(3)]
 
-            if interpolation == 'nearest':
+            if interpolation == "nearest":
                 order = 0
             else:
                 order = 1
@@ -585,35 +559,34 @@ class AdvancedPreprocessingPipeline:
         else:
             raise ValueError(f"Unsupported image dimensions: {image.ndim}")
 
-    def _apply_augmentation(self, ct: np.ndarray, mri: np.ndarray,
-                          mask: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
-        """Apply random augmentations to image pair"""
-        augmentation_type = np.random.choice([
-            'elastic', 'noise', 'intensity_shift', 'gamma', 'motion'
-        ])
+    def _apply_augmentation(
+        self, ct: np.ndarray, mri: np.ndarray, mask: np.ndarray | None = None
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+        """Apply random augmentations to image pair."""
+        augmentation_type = np.random.choice(["elastic", "noise", "intensity_shift", "gamma", "motion"])
 
-        if augmentation_type == 'elastic':
+        if augmentation_type == "elastic":
             ct_aug = self.augmentation.elastic_deformation(ct)
             mri_aug = self.augmentation.elastic_deformation(mri)
             mask_aug = self.augmentation.elastic_deformation(mask) if mask is not None else None
 
-        elif augmentation_type == 'noise':
-            noise_type = np.random.choice(['gaussian', 'rician'])
+        elif augmentation_type == "noise":
+            noise_type = np.random.choice(["gaussian", "rician"])
             ct_aug = self.augmentation.add_noise(ct, noise_type)
             mri_aug = self.augmentation.add_noise(mri, noise_type)
             mask_aug = mask  # Don't add noise to mask
 
-        elif augmentation_type == 'intensity_shift':
+        elif augmentation_type == "intensity_shift":
             ct_aug = self.augmentation.intensity_shift(ct)
             mri_aug = self.augmentation.intensity_shift(mri)
             mask_aug = mask
 
-        elif augmentation_type == 'gamma':
+        elif augmentation_type == "gamma":
             ct_aug = self.augmentation.gamma_correction(ct)
             mri_aug = self.augmentation.gamma_correction(mri)
             mask_aug = mask
 
-        elif augmentation_type == 'motion':
+        elif augmentation_type == "motion":
             ct_aug = self.augmentation.simulate_motion_artifacts(ct)
             mri_aug = self.augmentation.simulate_motion_artifacts(mri)
             mask_aug = mask
@@ -623,8 +596,9 @@ class AdvancedPreprocessingPipeline:
 
         return ct_aug, mri_aug, mask_aug
 
-    def batch_preprocess(self, data_pairs: List[Tuple[str, str, Optional[str]]],
-                        output_dir: Union[str, Path], n_jobs: int = 1) -> List[Dict]:
+    def batch_preprocess(
+        self, data_pairs: list[tuple[str, str, str | None]], output_dir: str | Path, n_jobs: int = 1
+    ) -> list[dict]:
         """
         Batch preprocessing of multiple image pairs.
 
@@ -650,51 +624,48 @@ class AdvancedPreprocessingPipeline:
                 case_dir = output_dir / case_id
                 case_dir.mkdir(exist_ok=True)
 
-                np.save(case_dir / "ct.npy", result['ct'])
-                np.save(case_dir / "mri.npy", result['mri'])
-                if result['mask'] is not None:
-                    np.save(case_dir / "mask.npy", result['mask'])
+                np.save(case_dir / "ct.npy", result["ct"])
+                np.save(case_dir / "mri.npy", result["mri"])
+                if result["mask"] is not None:
+                    np.save(case_dir / "mask.npy", result["mask"])
 
                 # Save metadata
                 metadata = {
-                    'transform_params': result['transform_params'].tolist(),
-                    'quality_scores': result['quality_scores'],
-                    'original_paths': {
-                        'ct': str(ct_path),
-                        'mri': str(mri_path),
-                        'mask': str(mask_path) if mask_path else None
-                    }
+                    "transform_params": result["transform_params"].tolist(),
+                    "quality_scores": result["quality_scores"],
+                    "original_paths": {
+                        "ct": str(ct_path),
+                        "mri": str(mri_path),
+                        "mask": str(mask_path) if mask_path else None,
+                    },
                 }
 
                 import json
-                with open(case_dir / "metadata.json", 'w') as f:
+
+                with open(case_dir / "metadata.json", "w") as f:
                     json.dump(metadata, f, indent=2)
 
-                results.append({'case_id': case_id, 'status': 'success', **result})
+                results.append({"case_id": case_id, "status": "success", **result})
 
             except Exception as e:
                 self.logger.error(f"Failed to process pair {i}: {e}")
-                results.append({'case_id': f"case_{i:04d}", 'status': 'failed', 'error': str(e)})
+                results.append({"case_id": f"case_{i:04d}", "status": "failed", "error": str(e)})
 
         return results
 
 
 def main():
-    """Demonstration of advanced preprocessing pipeline"""
+    """Demonstration of advanced preprocessing pipeline."""
     config = PreprocessingConfig(
         target_size=(128, 128, 128),
         bias_field_correction=True,
-        normalization_method='zscore_robust',
-        augmentation_probability=0.3
+        normalization_method="zscore_robust",
+        augmentation_probability=0.3,
     )
 
-    pipeline = AdvancedPreprocessingPipeline(config)
+    AdvancedPreprocessingPipeline(config)
 
     # Example usage (with dummy paths)
-    data_pairs = [
-        ("/path/to/ct1.nii.gz", "/path/to/mri1.nii.gz", "/path/to/mask1.nii.gz"),
-        ("/path/to/ct2.nii.gz", "/path/to/mri2.nii.gz", "/path/to/mask2.nii.gz"),
-    ]
 
     # Batch processing
     # results = pipeline.batch_preprocess(data_pairs, "/path/to/output")

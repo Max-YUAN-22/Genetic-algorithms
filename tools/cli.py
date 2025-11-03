@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import typer
-from typing import Optional
 
-from tools.seed_utils import set_global_seed
-from tools.mlflow_tracking import MLflowTracker
 from run_enhanced_framework import EnhancedFrameworkRunner
-
+from tools.mlflow_tracking import MLflowTracker
+from tools.seed_utils import set_global_seed
 
 app = typer.Typer(help="Unified CLI for the enhanced multimodal brain tumor segmentation framework")
 
@@ -40,7 +40,7 @@ def demo(
 
 @app.command()
 def train(
-    data_path: Optional[str] = typer.Option(None, help="Path to training data"),
+    data_path: str | None = typer.Option(None, help="Path to training data"),
     output_dir: str = typer.Option("enhanced_framework_results", help="Output directory"),
     seed: int = typer.Option(42, help="Global random seed"),
     mlflow: bool = typer.Option(False, help="Enable MLflow tracking"),
@@ -61,7 +61,7 @@ def train(
 
 @app.command()
 def validate(
-    test_data: Optional[str] = typer.Option(None, help="Path to test data"),
+    test_data: str | None = typer.Option(None, help="Path to test data"),
     output_dir: str = typer.Option("enhanced_framework_results", help="Output directory"),
     seed: int = typer.Option(42, help="Global random seed"),
     mlflow: bool = typer.Option(False, help="Enable MLflow tracking"),
@@ -82,7 +82,7 @@ def validate(
 
 @app.command()
 def full(
-    data_dir: Optional[str] = typer.Option(None, help="Root data directory"),
+    data_dir: str | None = typer.Option(None, help="Root data directory"),
     output_dir: str = typer.Option("enhanced_framework_results", help="Output directory"),
     seed: int = typer.Option(42, help="Global random seed"),
     mlflow: bool = typer.Option(False, help="Enable MLflow tracking"),
@@ -103,5 +103,3 @@ def full(
 
 if __name__ == "__main__":
     app()
-
-

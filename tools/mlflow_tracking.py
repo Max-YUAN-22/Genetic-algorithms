@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class MLflowTracker:
-    """Lightweight MLflow wrapper. Fails silent if mlflow is not installed.
+    """
+    Lightweight MLflow wrapper. Fails silent if mlflow is not installed.
 
     Usage:
         tracker = MLflowTracker(enabled=True, experiment_name="exp", tracking_uri="file:./mlruns")
@@ -20,8 +21,8 @@ class MLflowTracker:
     def __init__(
         self,
         enabled: bool = False,
-        experiment_name: Optional[str] = None,
-        tracking_uri: Optional[str] = None,
+        experiment_name: str | None = None,
+        tracking_uri: str | None = None,
     ) -> None:
         self.enabled = enabled
         self._mlflow = None
@@ -43,16 +44,16 @@ class MLflowTracker:
             self.enabled = False
             self._mlflow = None
 
-    def start_run(self, run_name: Optional[str] = None):  # type: ignore[override]
+    def start_run(self, run_name: str | None = None):  # type: ignore[override]
         if not self.enabled or self._mlflow is None:
             return _NullContext()
         return self._mlflow.start_run(run_name=run_name)
 
-    def log_params(self, params: Dict[str, Any]) -> None:
+    def log_params(self, params: dict[str, Any]) -> None:
         if not self.enabled or self._mlflow is None:
             return
         # mlflow expects flat dict with str, int, float, bool; stringify others
-        safe_params: Dict[str, Any] = {}
+        safe_params: dict[str, Any] = {}
         for k, v in params.items():
             if isinstance(v, (str, int, float, bool)) or v is None:
                 safe_params[k] = v
@@ -66,7 +67,7 @@ class MLflowTracker:
         except Exception:
             pass
 
-    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None) -> None:
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
         if not self.enabled or self._mlflow is None:
             return
         try:
@@ -83,7 +84,7 @@ class MLflowTracker:
         except Exception:
             pass
 
-    def log_dict(self, data: Dict[str, Any], artifact_file: str) -> None:
+    def log_dict(self, data: dict[str, Any], artifact_file: str) -> None:
         if not self.enabled or self._mlflow is None:
             return
         try:
@@ -105,5 +106,3 @@ class _NullContext:
 
     def __exit__(self, exc_type, exc, tb):
         return False
-
-

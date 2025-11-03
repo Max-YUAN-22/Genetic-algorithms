@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified BraTS Dataset Adapter (No External Dependencies)
+Simplified BraTS Dataset Adapter (No External Dependencies).
 
 This version works with your current environment and provides a foundation
 for integrating BraTS data with our enhanced multimodal framework.
@@ -11,16 +11,14 @@ Since we don't have nibabel installed, this version:
 3. Includes installation instructions for full functionality
 """
 
-import numpy as np
-import os
-import json
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 import logging
+from pathlib import Path
+
+import numpy as np
 
 
 class SimpleBraTSConfig:
-    """Simplified configuration for BraTS dataset"""
+    """Simplified configuration for BraTS dataset."""
 
     def __init__(self):
         # Dataset paths
@@ -28,7 +26,7 @@ class SimpleBraTSConfig:
         self.original_data_dir = self.brats_root + "/01_Original_NIfTI_Data/data"
 
         # Our framework uses T1ce (contrast-enhanced) + FLAIR
-        self.primary_modality = "t1ce"    # Acts as "CT" in our framework
+        self.primary_modality = "t1ce"  # Acts as "CT" in our framework
         self.secondary_modality = "flair"  # Acts as "MRI" in our framework
 
         # Target size for our framework
@@ -39,16 +37,16 @@ class SimpleBraTSConfig:
             0: 0,  # Background -> Background
             1: 1,  # NCR/NET -> Core
             2: 2,  # Edema -> Edema
-            4: 3   # Enhancing -> Enhancing
+            4: 3,  # Enhancing -> Enhancing
         }
 
 
 class MockBraTSData:
-    """Create mock BraTS-like data for testing when real data isn't accessible"""
+    """Create mock BraTS-like data for testing when real data isn't accessible."""
 
     @staticmethod
-    def create_mock_case(case_id: str, target_size: Tuple[int, int] = (256, 256)) -> Dict[str, np.ndarray]:
-        """Create realistic mock BraTS data"""
+    def create_mock_case(case_id: str, target_size: tuple[int, int] = (256, 256)) -> dict[str, np.ndarray]:
+        """Create realistic mock BraTS data."""
         h, w = target_size
 
         # Generate T1ce (contrast-enhanced) - bright tumor regions
@@ -57,15 +55,15 @@ class MockBraTSData:
         # Add bright tumor regions for T1ce
         if "00000" in case_id or "00002" in case_id:  # Some cases have tumors
             # Create tumor core
-            center_x, center_y = w//2 + np.random.randint(-30, 30), h//2 + np.random.randint(-30, 30)
+            center_x, center_y = w // 2 + np.random.randint(-30, 30), h // 2 + np.random.randint(-30, 30)
             y, x = np.ogrid[:h, :w]
 
             # Core region (bright in T1ce)
-            core_mask = (x - center_x)**2 + (y - center_y)**2 <= 15**2
+            core_mask = (x - center_x) ** 2 + (y - center_y) ** 2 <= 15**2
             t1ce[core_mask] = np.random.normal(0.8, 0.1, np.sum(core_mask))
 
             # Edema region (moderate in T1ce)
-            edema_mask = ((x - center_x)**2 + (y - center_y)**2 <= 25**2) & (~core_mask)
+            edema_mask = ((x - center_x) ** 2 + (y - center_y) ** 2 <= 25**2) & (~core_mask)
             t1ce[edema_mask] = np.random.normal(0.5, 0.1, np.sum(edema_mask))
 
         # Generate FLAIR - good for edema visualization
@@ -81,26 +79,21 @@ class MockBraTSData:
         seg = np.zeros((h, w), dtype=np.uint8)
         if "00000" in case_id or "00002" in case_id:
             seg[edema_mask] = 2  # Edema
-            seg[core_mask] = 1   # Core
+            seg[core_mask] = 1  # Core
 
             # Add some enhancing regions
-            enh_mask = (x - center_x)**2 + (y - center_y)**2 <= 8**2
+            enh_mask = (x - center_x) ** 2 + (y - center_y) ** 2 <= 8**2
             seg[enh_mask] = 3  # Enhancing
 
         # Clip values to reasonable range
         t1ce = np.clip(t1ce, 0, 1)
         flair = np.clip(flair, 0, 1)
 
-        return {
-            't1ce': t1ce,
-            'flair': flair,
-            'seg': seg,
-            'case_id': case_id
-        }
+        return {"t1ce": t1ce, "flair": flair, "seg": seg, "case_id": case_id}
 
     @staticmethod
-    def create_mock_dataset(num_cases: int = 20) -> List[Dict[str, np.ndarray]]:
-        """Create a complete mock dataset"""
+    def create_mock_dataset(num_cases: int = 20) -> list[dict[str, np.ndarray]]:
+        """Create a complete mock dataset."""
         dataset = []
         for i in range(num_cases):
             case_id = f"BraTS2021_{i:05d}"
@@ -110,7 +103,7 @@ class MockBraTSData:
 
 
 class SimpleBraTSLoader:
-    """Simplified BraTS data loader"""
+    """Simplified BraTS data loader."""
 
     def __init__(self, config: SimpleBraTSConfig = None):
         self.config = config or SimpleBraTSConfig()
@@ -126,25 +119,25 @@ class SimpleBraTSLoader:
             self.logger.info("⚠️  Real BraTS data not accessible, using mock data")
             self.case_list = self._get_mock_case_list()
 
-    def _discover_real_cases(self) -> List[str]:
-        """Discover real BraTS cases"""
+    def _discover_real_cases(self) -> list[str]:
+        """Discover real BraTS cases."""
         data_dir = Path(self.config.original_data_dir)
-        case_dirs = [d.name for d in data_dir.iterdir() if d.is_dir() and d.name.startswith('BraTS')]
+        case_dirs = [d.name for d in data_dir.iterdir() if d.is_dir() and d.name.startswith("BraTS")]
         return sorted(case_dirs)
 
-    def _get_mock_case_list(self) -> List[str]:
-        """Get mock case list"""
+    def _get_mock_case_list(self) -> list[str]:
+        """Get mock case list."""
         return [f"BraTS2021_{i:05d}" for i in range(20)]
 
-    def load_case(self, case_id: str) -> Dict[str, np.ndarray]:
-        """Load a single case (real or mock)"""
+    def load_case(self, case_id: str) -> dict[str, np.ndarray]:
+        """Load a single case (real or mock)."""
         if self.has_real_data:
             return self._load_real_case(case_id)
         else:
             return MockBraTSData.create_mock_case(case_id, self.config.target_size)
 
-    def _load_real_case(self, case_id: str) -> Dict[str, np.ndarray]:
-        """Load real BraTS case (placeholder - needs nibabel)"""
+    def _load_real_case(self, case_id: str) -> dict[str, np.ndarray]:
+        """Load real BraTS case (placeholder - needs nibabel)."""
         # This would use nibabel to load NIfTI files
         # For now, return mock data with real case structure
         case_dir = Path(self.config.original_data_dir) / case_id
@@ -159,39 +152,39 @@ class SimpleBraTSLoader:
         # Return mock data for now (would load real data with nibabel)
         return MockBraTSData.create_mock_case(case_id, self.config.target_size)
 
-    def get_dataset_splits(self, train_ratio: float = 0.7) -> Dict[str, List[str]]:
-        """Split dataset into train/val/test"""
+    def get_dataset_splits(self, train_ratio: float = 0.7) -> dict[str, list[str]]:
+        """Split dataset into train/val/test."""
         total_cases = len(self.case_list)
         train_size = int(total_cases * train_ratio)
         val_size = int(total_cases * 0.15)
 
         splits = {
-            'train': self.case_list[:train_size],
-            'val': self.case_list[train_size:train_size + val_size],
-            'test': self.case_list[train_size + val_size:]
+            "train": self.case_list[:train_size],
+            "val": self.case_list[train_size : train_size + val_size],
+            "test": self.case_list[train_size + val_size :],
         }
 
-        self.logger.info(f"Dataset splits: train={len(splits['train'])}, "
-                        f"val={len(splits['val'])}, test={len(splits['test'])}")
+        self.logger.info(
+            f"Dataset splits: train={len(splits['train'])}, val={len(splits['val'])}, test={len(splits['test'])}"
+        )
 
         return splits
 
-    def prepare_for_framework(self, case_data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        """Prepare case data for our multimodal framework"""
-
+    def prepare_for_framework(self, case_data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Prepare case data for our multimodal framework."""
         # Our framework expects 'ct' and 'mri' keys
         # We map T1ce -> ct, FLAIR -> mri
         prepared = {
-            'ct': case_data['t1ce'],      # T1ce acts as CT modality
-            'mri': case_data['flair'],    # FLAIR acts as MRI modality
-            'mask': case_data['seg'],     # Segmentation
-            'case_id': case_data['case_id']
+            "ct": case_data["t1ce"],  # T1ce acts as CT modality
+            "mri": case_data["flair"],  # FLAIR acts as MRI modality
+            "mask": case_data["seg"],  # Segmentation
+            "case_id": case_data["case_id"],
         }
 
         return prepared
 
-    def create_framework_dataset(self, case_ids: List[str]) -> List[Dict[str, np.ndarray]]:
-        """Create dataset in our framework format"""
+    def create_framework_dataset(self, case_ids: list[str]) -> list[dict[str, np.ndarray]]:
+        """Create dataset in our framework format."""
         dataset = []
 
         for case_id in case_ids:
@@ -210,16 +203,16 @@ class SimpleBraTSLoader:
         self.logger.info(f"Created framework dataset with {len(dataset)} cases")
         return dataset
 
-    def analyze_dataset(self) -> Dict:
-        """Analyze the dataset"""
+    def analyze_dataset(self) -> dict:
+        """Analyze the dataset."""
         # Sample a few cases for analysis
         sample_cases = self.case_list[:5]
 
         stats = {
-            'total_cases': len(self.case_list),
-            'sample_analysis': {},
-            'has_real_data': self.has_real_data,
-            'data_source': 'real' if self.has_real_data else 'mock'
+            "total_cases": len(self.case_list),
+            "sample_analysis": {},
+            "has_real_data": self.has_real_data,
+            "data_source": "real" if self.has_real_data else "mock",
         }
 
         for case_id in sample_cases:
@@ -228,15 +221,15 @@ class SimpleBraTSLoader:
 
                 # Analyze this case
                 case_stats = {
-                    't1ce_shape': case_data['t1ce'].shape,
-                    'flair_shape': case_data['flair'].shape,
-                    'seg_shape': case_data['seg'].shape,
-                    'unique_labels': np.unique(case_data['seg']).tolist(),
-                    't1ce_range': [float(case_data['t1ce'].min()), float(case_data['t1ce'].max())],
-                    'flair_range': [float(case_data['flair'].min()), float(case_data['flair'].max())]
+                    "t1ce_shape": case_data["t1ce"].shape,
+                    "flair_shape": case_data["flair"].shape,
+                    "seg_shape": case_data["seg"].shape,
+                    "unique_labels": np.unique(case_data["seg"]).tolist(),
+                    "t1ce_range": [float(case_data["t1ce"].min()), float(case_data["t1ce"].max())],
+                    "flair_range": [float(case_data["flair"].min()), float(case_data["flair"].max())],
                 }
 
-                stats['sample_analysis'][case_id] = case_stats
+                stats["sample_analysis"][case_id] = case_stats
 
             except Exception as e:
                 self.logger.error(f"Error analyzing case {case_id}: {e}")
@@ -245,7 +238,7 @@ class SimpleBraTSLoader:
 
 
 def test_brats_integration():
-    """Test BraTS integration with our framework"""
+    """Test BraTS integration with our framework."""
     print("🧠 Testing Simplified BraTS Integration...")
 
     # Initialize loader
@@ -254,15 +247,15 @@ def test_brats_integration():
 
     # Analyze dataset
     stats = loader.analyze_dataset()
-    print(f"\n📊 Dataset Analysis:")
+    print("\n📊 Dataset Analysis:")
     print(f"   Total cases: {stats['total_cases']}")
     print(f"   Data source: {stats['data_source']}")
     print(f"   Has real data: {stats['has_real_data']}")
 
     # Show sample case analysis
-    if stats['sample_analysis']:
-        sample_case = list(stats['sample_analysis'].keys())[0]
-        sample_stats = stats['sample_analysis'][sample_case]
+    if stats["sample_analysis"]:
+        sample_case = next(iter(stats["sample_analysis"].keys()))
+        sample_stats = stats["sample_analysis"][sample_case]
         print(f"\n🔍 Sample case {sample_case}:")
         print(f"   T1ce shape: {sample_stats['t1ce_shape']}")
         print(f"   FLAIR shape: {sample_stats['flair_shape']}")
@@ -271,10 +264,10 @@ def test_brats_integration():
 
     # Test dataset creation for framework
     splits = loader.get_dataset_splits()
-    train_dataset = loader.create_framework_dataset(splits['train'][:3])  # Test with 3 cases
+    train_dataset = loader.create_framework_dataset(splits["train"][:3])  # Test with 3 cases
 
     if train_dataset:
-        print(f"\n🚀 Framework Integration Test:")
+        print("\n🚀 Framework Integration Test:")
         sample = train_dataset[0]
         print(f"   Sample case ID: {sample['case_id']}")
         print(f"   CT (T1ce) shape: {sample['ct'].shape}")
@@ -287,26 +280,26 @@ def test_brats_integration():
             # Simulate what our framework expects
             import torch
 
-            ct_tensor = torch.from_numpy(sample['ct']).float().unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
-            mri_tensor = torch.from_numpy(sample['mri']).float().unsqueeze(0).unsqueeze(0)
-            mask_tensor = torch.from_numpy(sample['mask']).long()
+            ct_tensor = torch.from_numpy(sample["ct"]).float().unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
+            mri_tensor = torch.from_numpy(sample["mri"]).float().unsqueeze(0).unsqueeze(0)
+            mask_tensor = torch.from_numpy(sample["mask"]).long()
 
-            print(f"   PyTorch tensors created successfully!")
+            print("   PyTorch tensors created successfully!")
             print(f"   CT tensor shape: {ct_tensor.shape}")
             print(f"   MRI tensor shape: {mri_tensor.shape}")
             print(f"   Mask tensor shape: {mask_tensor.shape}")
 
         except ImportError:
-            print(f"   PyTorch not available, but data format is correct")
+            print("   PyTorch not available, but data format is correct")
 
     return True
 
 
 def show_installation_guide():
-    """Show installation guide for full functionality"""
-    print("\n" + "="*60)
+    """Show installation guide for full functionality."""
+    print("\n" + "=" * 60)
     print("📦 Installation Guide for Full BraTS Support")
-    print("="*60)
+    print("=" * 60)
     print("""
 To enable full BraTS dataset support, install these packages:
 
@@ -330,24 +323,24 @@ Once installed, the full BraTS adapter will be able to:
 ✅ Handle 3D volumes (not just 2D slices)
 ✅ Apply medical-specific augmentations
 """)
-    print("="*60)
+    print("=" * 60)
 
 
 def main():
-    """Main test function"""
+    """Main test function."""
     try:
         success = test_brats_integration()
 
         if success:
-            print(f"\n✅ BraTS integration test completed successfully!")
-            print(f"🚀 Ready to integrate with enhanced multimodal framework!")
+            print("\n✅ BraTS integration test completed successfully!")
+            print("🚀 Ready to integrate with enhanced multimodal framework!")
 
             # Show next steps
-            print(f"\n📋 Next Steps:")
-            print(f"1. Run the enhanced framework with BraTS data:")
-            print(f"   python run_enhanced_framework.py --mode demo")
-            print(f"2. For real data processing, install medical libraries")
-            print(f"3. Run full training pipeline when ready")
+            print("\n📋 Next Steps:")
+            print("1. Run the enhanced framework with BraTS data:")
+            print("   python run_enhanced_framework.py --mode demo")
+            print("2. For real data processing, install medical libraries")
+            print("3. Run full training pipeline when ready")
 
             show_installation_guide()
 
@@ -356,6 +349,7 @@ def main():
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

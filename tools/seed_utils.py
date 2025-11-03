@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
 import random
-from typing import Optional
 
 
-def set_global_seed(seed: Optional[int] = None) -> int:
-    """Set global RNG seeds for reproducibility across Python, NumPy, and PyTorch if available.
+def set_global_seed(seed: int | None = None) -> int:
+    """
+    Set global RNG seeds for reproducibility across Python, NumPy, and PyTorch if available.
 
     Returns the effective seed used to initialize all RNGs.
     """
@@ -40,5 +42,3 @@ def set_global_seed(seed: Optional[int] = None) -> int:
 
     os.environ["PYTHONHASHSEED"] = str(seed)
     return seed
-
-

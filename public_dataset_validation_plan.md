@@ -16,7 +16,7 @@
 - [ ] **MSD Liver**: 131个肝脏CT案例
 - [ ] **MSD Heart**: 20个心脏MRI案例
 - [ ] **MSD Lung**: 63个肺部CT案例
-- [ ] **LiTS**: 201个肝脏CT案例
+- [ ] **list**: 201个肝脏CT案例
 - [ ] **KiTS**: 300个肾脏CT案例
 
 ### 2. **跨数据集验证策略**
@@ -24,66 +24,61 @@
 #### 策略A: 同域跨年份验证
 ```python
 def cross_year_validation():
-    """使用不同年份的BRaTS数据验证"""
+    """使用不同年份的BRaTS数据验证."""
     datasets = {
-        'BRaTS2018': load_brats_2018(),
-        'BRaTS2019': load_brats_2019(), 
-        'BRaTS2020': load_brats_2020(),  # 训练集
-        'BRaTS2021': load_brats_2021()
+        "BRaTS2018": load_brats_2018(),
+        "BRaTS2019": load_brats_2019(),
+        "BRaTS2020": load_brats_2020(),  # 训练集
+        "BRaTS2021": load_brats_2021(),
     }
-    
+
     # 在BRaTS2020上训练
     model = train_on_brats_2020()
-    
+
     # 在其他年份上测试
     results = {}
     for year, dataset in datasets.items():
-        if year != 'BRaTS2020':
+        if year != "BRaTS2020":
             results[year] = evaluate_model(model, dataset)
-    
+
     return results
 ```
 
 #### 策略B: 跨器官验证
 ```python
 def cross_organ_validation():
-    """验证方法在其他器官上的泛化性"""
-    organ_datasets = {
-        'Liver': MSD_Liver(),
-        'Heart': MSD_Heart(),
-        'Lung': MSD_Lung(),
-        'Kidney': KiTS()
-    }
-    
+    """验证方法在其他器官上的泛化性."""
+    organ_datasets = {"Liver": MSD_Liver(), "Heart": MSD_Heart(), "Lung": MSD_Lung(), "Kidney": KiTS()}
+
     # 使用预训练的脑肿瘤模型
     model = load_pretrained_brain_model()
-    
+
     results = {}
     for organ, dataset in organ_datasets.items():
         # 微调模型
         fine_tuned_model = fine_tune_model(model, dataset)
         results[organ] = evaluate_model(fine_tuned_model, dataset)
-    
+
     return results
 ```
 
 #### 策略C: 跨模态验证
 ```python
 def cross_modality_validation():
-    """验证方法在不同模态组合上的性能"""
+    """验证方法在不同模态组合上的性能."""
     modality_combinations = {
-        'T1_T1ce': ['T1', 'T1ce'],
-        'T1_T2': ['T1', 'T2'],
-        'T1_FLAIR': ['T1', 'FLAIR'],
-        'T1ce_T2': ['T1ce', 'T2'],
-        'All_4': ['T1', 'T1ce', 'T2', 'FLAIR']
+        "T1_T1ce": ["T1", "T1ce"],
+        "T1_T2": ["T1", "T2"],
+        "T1_FLAIR": ["T1", "FLAIR"],
+        "T1ce_T2": ["T1ce", "T2"],
+        "All_4": ["T1", "T1ce", "T2", "FLAIR"],
     }
-    
+
     results = {}
     for combo_name, modalities in modality_combinations.items():
         model = train_multimodal_model(modalities)
         results[combo_name] = evaluate_model(model)
-    
+
     return results
 ```
 
@@ -148,65 +143,66 @@ def cross_modality_validation():
 #### 方案A: 临床指标计算
 ```python
 def calculate_clinical_metrics(predictions, ground_truth):
-    """计算临床相关指标"""
+    """计算临床相关指标."""
     metrics = {}
-    
+
     # 肿瘤体积计算
     tumor_volumes = []
     for pred, gt in zip(predictions, ground_truth):
         pred_volume = calculate_volume(pred)
         gt_volume = calculate_volume(gt)
         tumor_volumes.append((pred_volume, gt_volume))
-    
+
     # 体积相关性
     volumes_pred = [v[0] for v in tumor_volumes]
     volumes_gt = [v[1] for v in tumor_volumes]
-    metrics['volume_correlation'] = np.corrcoef(volumes_pred, volumes_gt)[0, 1]
-    
+    metrics["volume_correlation"] = np.corrcoef(volumes_pred, volumes_gt)[0, 1]
+
     # 形状特征
     shape_features = calculate_shape_features(predictions, ground_truth)
     metrics.update(shape_features)
-    
+
     return metrics
 
+
 def calculate_shape_features(predictions, ground_truth):
-    """计算形状特征"""
+    """计算形状特征."""
     features = {}
-    
+
     # 球形度
     sphericality_pred = calculate_sphericality(predictions)
     sphericality_gt = calculate_sphericality(ground_truth)
-    features['sphericality_correlation'] = np.corrcoef(sphericality_pred, sphericality_gt)[0, 1]
-    
+    features["sphericality_correlation"] = np.corrcoef(sphericality_pred, sphericality_gt)[0, 1]
+
     # 紧致度
     compactness_pred = calculate_compactness(predictions)
     compactness_gt = calculate_compactness(ground_truth)
-    features['compactness_correlation'] = np.corrcoef(compactness_pred, compactness_gt)[0, 1]
-    
+    features["compactness_correlation"] = np.corrcoef(compactness_pred, compactness_gt)[0, 1]
+
     return features
 ```
 
 #### 方案B: 文献对比分析
 ```python
 def literature_comparison():
-    """与已发表文献结果对比"""
+    """与已发表文献结果对比."""
     literature_results = {
-        'U-Net (2015)': {'Dice_WT': 0.823, 'Dice_TC': 0.756, 'Dice_ET': 0.612},
-        'Attention U-Net (2018)': {'Dice_WT': 0.841, 'Dice_TC': 0.778, 'Dice_ET': 0.634},
-        'nnU-Net (2021)': {'Dice_WT': 0.856, 'Dice_TC': 0.792, 'Dice_ET': 0.658},
-        'TransUNet (2021)': {'Dice_WT': 0.863, 'Dice_TC': 0.801, 'Dice_ET': 0.671},
-        'Our Method': {'Dice_WT': 0.871, 'Dice_TC': 0.815, 'Dice_ET': 0.689}
+        "U-Net (2015)": {"Dice_WT": 0.823, "Dice_TC": 0.756, "Dice_ET": 0.612},
+        "Attention U-Net (2018)": {"Dice_WT": 0.841, "Dice_TC": 0.778, "Dice_ET": 0.634},
+        "nnU-Net (2021)": {"Dice_WT": 0.856, "Dice_TC": 0.792, "Dice_ET": 0.658},
+        "TransUNet (2021)": {"Dice_WT": 0.863, "Dice_TC": 0.801, "Dice_ET": 0.671},
+        "Our Method": {"Dice_WT": 0.871, "Dice_TC": 0.815, "Dice_ET": 0.689},
     }
-    
+
     # 计算改进幅度
     improvements = {}
-    baseline = literature_results['nnU-Net (2021)']
-    our_results = literature_results['Our Method']
-    
-    for metric in ['Dice_WT', 'Dice_TC', 'Dice_ET']:
+    baseline = literature_results["nnU-Net (2021)"]
+    our_results = literature_results["Our Method"]
+
+    for metric in ["Dice_WT", "Dice_TC", "Dice_ET"]:
         improvement = (our_results[metric] - baseline[metric]) / baseline[metric] * 100
         improvements[metric] = improvement
-    
+
     return improvements
 ```
 

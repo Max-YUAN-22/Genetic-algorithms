@@ -2,7 +2,7 @@
 
 ### Environment
 ```bash
-pyenv shell 3.11.13  # or Python>=3.10
+pyenv shell 3.11.13 # or Python>=3.10
 python -m venv .venv && source .venv/bin/activate
 pip install -U pip
 pip install -e . || true

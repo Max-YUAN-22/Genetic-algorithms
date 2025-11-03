@@ -24,7 +24,7 @@
       "mean_dice": 0.009562937361936617,
       "WT_Dice_mean": 0.05772446902481532,
       "TC_Dice_mean": 0.012138140130249246,
-      "ET_Dice_mean": 8.600396050639176e-05,
+      "ET_Dice_mean": 8.600396050639176e-5,
       "WT_Hausdorff95_mean": Infinity,
       "TC_Hausdorff95_mean": Infinity,
       "ET_Hausdorff95_mean": Infinity
